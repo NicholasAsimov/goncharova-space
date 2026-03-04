@@ -39,6 +39,11 @@ a {
   color: inherit;
 }
 
+a:focus-visible {
+  outline: 2px solid rgba(244, 241, 63, 0.85);
+  outline-offset: 2px;
+}
+
 h1,
 h2,
 h3,
@@ -87,6 +92,11 @@ nav a {
 }
 
 nav a:hover {
+  color: var(--text);
+  border-color: var(--text);
+}
+
+nav a:focus-visible {
   color: var(--text);
   border-color: var(--text);
 }
@@ -360,7 +370,8 @@ h1 {
 }
 
 .certificates {
-  padding: 56px 0;
+  padding: 72px 0 56px;
+  scroll-margin-top: 84px;
 }
 
 .certificates h2 {
@@ -381,69 +392,84 @@ h1 {
   text-underline-offset: 3px;
 }
 
+.certificates a:hover {
+  color: #f3e9dd;
+}
+
 .contact-stage {
   width: 100vw;
   margin-left: calc(50% - 50vw);
   min-height: calc(100svh - 72px);
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+  grid-template-columns: minmax(0, 1.2fr) minmax(320px, 0.8fr);
   grid-template-areas:
     "kicker kicker"
-    "title email"
-    "title actions"
-    "note note";
+    "left right";
   align-content: center;
-  align-items: start;
-  gap: 16px 28px;
-  padding: 28px 24px;
+  align-items: center;
+  gap: 16px 36px;
+  padding: 22px 24px;
   background: #0c0c0c;
 }
 
 .contact-kicker {
   grid-area: kicker;
-  color: var(--muted);
+  color: #efe6ad;
   font-size: 0.76rem;
   letter-spacing: 0.15em;
   text-transform: uppercase;
 }
 
+.contact-left {
+  grid-area: left;
+  display: grid;
+  gap: 16px;
+}
+
 .contact-stage h2 {
-  grid-area: title;
-  max-width: 16ch;
-  font-size: clamp(1.9rem, 5.2vw, 5rem);
+  max-width: 13ch;
+  font-size: clamp(1.9rem, 5vw, 4.7rem);
   text-transform: uppercase;
   line-height: 0.9;
 }
 
+.contact-right {
+  grid-area: right;
+  display: grid;
+  gap: 12px;
+  align-content: start;
+}
+
 .contact-mail {
-  grid-area: email;
   width: fit-content;
-  text-decoration: none;
+  display: inline-block;
+  text-decoration-line: underline;
+  text-decoration-color: #3d3934;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 6px;
   font-family: var(--font-display);
   font-size: clamp(1rem, 1.7vw, 1.7rem);
+  line-height: 1.26;
   letter-spacing: 0.015em;
-  border-bottom: 1px solid #3d3934;
-  padding-bottom: 4px;
-  transition: color 180ms ease, border-color 180ms ease;
+  transition: color 180ms ease, text-decoration-color 180ms ease;
 }
 
 .contact-mail:hover {
   color: var(--accent);
-  border-color: var(--accent);
+  text-decoration-color: var(--accent);
 }
 
 .contact-actions {
-  grid-area: actions;
   display: flex;
   flex-wrap: wrap;
-  gap: 10px;
+  gap: 8px;
 }
 
 .contact-actions a {
   text-decoration: none;
   border: 1px solid var(--line);
   border-radius: 999px;
-  padding: 10px 14px;
+  padding: 11px 16px;
   font-size: 0.76rem;
   letter-spacing: 0.11em;
   text-transform: uppercase;
@@ -457,10 +483,9 @@ h1 {
 }
 
 .contact-note {
-  grid-area: note;
   color: #80786f;
   font-size: 0.78rem;
-  margin-top: 6px;
+  margin-top: 0;
 }
 
 .reveal {
@@ -472,6 +497,37 @@ h1 {
 .reveal.in {
   opacity: 1;
   transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html,
+  body {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+
+  .project-card:hover {
+    transform: none;
+    border-color: #2f2b27;
+    background: #111111;
+    box-shadow: none;
+  }
+
+  .project-card:hover .project-media img {
+    transform: none;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+  }
 }
 
 @media (max-width: 980px) {
@@ -503,7 +559,7 @@ h1 {
 
   .about,
   .certificates {
-    padding: 30px 0;
+    padding: 44px 0 30px;
   }
 
   .about p {
@@ -545,16 +601,22 @@ h1 {
     grid-template-columns: 1fr;
     grid-template-areas:
       "kicker"
-      "title"
-      "email"
-      "actions"
-      "note";
-    gap: 14px;
-    padding: 18px 14px;
+      "left"
+      "right";
+    gap: 12px;
+    padding: 16px 14px;
   }
 
   .contact-stage h2 {
     max-width: 100%;
+  }
+
+  .contact-left {
+    gap: 12px;
+  }
+
+  .contact-right {
+    gap: 10px;
   }
 
   .contact-mail {
