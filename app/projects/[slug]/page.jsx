@@ -2,7 +2,6 @@ import fs from "fs";
 import path from "path";
 import { notFound } from "next/navigation";
 import { getAdjacentProjects, getAllProjects, getProjectBySlug } from "@/lib/projects";
-import SiteHeader from "@/components/site-header";
 import ProjectCaseContent from "@/components/project-case-content";
 
 const IMAGE_EXTENSIONS = [".png", ".jpg", ".jpeg", ".webp", ".gif"];
@@ -48,7 +47,6 @@ export default async function ProjectCasePage({ params }) {
 
   return (
     <main className="min-h-screen bg-[#f6f5f1] text-black">
-      <SiteHeader />
       <ProjectCaseContent project={project} gallery={gallery} previous={previous} next={next} />
     </main>
   );
