@@ -105,9 +105,8 @@ export default function HomePage() {
       </section>
 
       <section id="projects" className="mx-auto w-full max-w-[1400px] px-4 pb-8 md:px-8">
-        <div className="mb-4 flex items-center justify-between border-b border-[#cfcbbf] pb-3">
+        <div className="mb-4 border-b border-[#cfcbbf] pb-3">
           <p className="font-display text-sm uppercase tracking-[0.12em]">Case studies</p>
-          <span className="text-xs uppercase tracking-[0.14em] text-[#657569]">{projects.length} projects</span>
         </div>
 
         <ul className="divide-y divide-[#cfcbbf] border-y border-[#cfcbbf]">
