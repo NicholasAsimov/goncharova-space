@@ -3,28 +3,9 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { encodeAsset } from "@/lib/projects";
+import TopNav from "@/components/top-nav";
 
 const EASE_OUT_EXPO = [0.22, 1, 0.36, 1];
-
-function ProjectNav() {
-  return (
-    <header className="pt-8 md:pt-9">
-      <div className="mx-auto flex w-full max-w-[340px] items-center justify-center gap-7 text-[22px] leading-none text-[#ff3b30] md:gap-8">
-        <Link href="/works" className="text-sm font-medium lowercase tracking-[-0.01em] hover:opacity-70">
-          works
-        </Link>
-
-        <Link href="/" className="font-script text-[56px] lowercase leading-[0.7] tracking-[-0.05em] hover:opacity-70" aria-label="home">
-          kate
-        </Link>
-
-        <Link href="/garden" className="text-sm font-medium lowercase tracking-[-0.01em] hover:opacity-70">
-          garden
-        </Link>
-      </div>
-    </header>
-  );
-}
 
 function CaseFrame({ src, alt, className = "", imageClassName = "", delay = 0 }) {
   return (
@@ -57,7 +38,7 @@ export default function ProjectCaseContent({ project, gallery, previous, next })
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.55, ease: EASE_OUT_EXPO }}>
-      <ProjectNav />
+      <TopNav />
 
       <motion.section
         className="mx-auto w-full max-w-[1020px] px-4 pb-7 pt-6 md:px-8 md:pt-10"

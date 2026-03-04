@@ -1,10 +1,10 @@
-import SiteHeader from "@/components/site-header";
+import TopNav from "@/components/top-nav";
 import { GardenMosaic, HeroArtCloud } from "@/components/work-sections";
 
 export default function GardenPage() {
   return (
     <main className="min-h-screen bg-[#f6f5f1] text-black">
-      <SiteHeader />
+      <TopNav />
 
       <section className="mx-auto w-full max-w-[1500px] px-4 pb-12 pt-10 md:px-8 md:pt-16">
         <div className="grid items-end gap-6 lg:grid-cols-12 lg:gap-8">

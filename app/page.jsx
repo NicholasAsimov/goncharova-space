@@ -4,6 +4,7 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { encodeAsset, getAllProjects } from "@/lib/projects";
+import TopNav from "@/components/top-nav";
 
 const PROJECTS = getAllProjects();
 
@@ -44,31 +45,6 @@ function BagMark() {
       <path d="M12 16H20" stroke="#ff3b30" strokeWidth="2" strokeLinecap="round" />
       <path d="M16 14V18" stroke="#ff3b30" strokeWidth="2" strokeLinecap="round" />
     </svg>
-  );
-}
-
-function HomeHeader() {
-  return (
-    <motion.header
-      className="pt-8 md:pt-9"
-      initial={{ opacity: 0, y: -16 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.7, ease: EASE_OUT_EXPO }}
-    >
-      <div className="mx-auto flex w-full max-w-[340px] items-center justify-center gap-7 text-[22px] leading-none text-[#ff3b30] md:gap-8">
-        <Link href="/works" className="text-sm font-medium lowercase tracking-[-0.01em] hover:opacity-70">
-          works
-        </Link>
-
-        <Link href="/" className="font-script text-[56px] lowercase leading-[0.7] tracking-[-0.05em] hover:opacity-70" aria-label="home">
-          kate
-        </Link>
-
-        <Link href="/garden" className="text-sm font-medium lowercase tracking-[-0.01em] hover:opacity-70">
-          garden
-        </Link>
-      </div>
-    </motion.header>
   );
 }
 
@@ -128,7 +104,7 @@ export default function HomePage() {
   return (
     <main className="overflow-x-clip bg-[#e9e8e5] text-black">
       <section className="relative">
-        <HomeHeader />
+        <TopNav animated />
 
         <motion.div
           className="pointer-events-none absolute -left-[132px] top-[164px] w-[360px] sm:-left-[104px] sm:w-[460px] md:-left-[44px] md:top-[146px] md:w-[592px]"
