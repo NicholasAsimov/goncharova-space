@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { useState } from "react";
 import { encodeAsset, getAllProjects } from "@/lib/projects";
 
 const PROJECTS = getAllProjects();
@@ -73,6 +74,18 @@ function HomeHeader() {
 
 function PreviewStrip() {
   const trackItems = [...HOME_MARQUEE, ...HOME_MARQUEE];
+  const [ratios, setRatios] = useState({});
+
+  const onImageLoad = (imageKey) => (event) => {
+    const { naturalWidth, naturalHeight } = event.currentTarget;
+    if (!naturalWidth || !naturalHeight) return;
+    const nextRatio = naturalWidth / naturalHeight;
+
+    setRatios((current) => {
+      if (current[imageKey] === nextRatio) return current;
+      return { ...current, [imageKey]: nextRatio };
+    });
+  };
 
   return (
     <motion.section
@@ -82,20 +95,28 @@ function PreviewStrip() {
       viewport={{ once: true, amount: 0.25 }}
       transition={{ duration: 0.75, ease: EASE_OUT_EXPO }}
     >
-      <div className="relative mx-auto mt-8 w-full overflow-hidden md:mt-10">
+      <div className="relative mx-auto mt-4 w-full overflow-hidden md:mt-8">
         <div className="marquee-track flex w-max gap-3 pl-2 md:gap-4 md:pl-4">
           {trackItems.map((project, idx) => (
+            (() => {
+              const imageKey = project.cover;
+              const ratio = ratios[imageKey] ?? 1.35;
+              return (
             <Link
               key={`${project.slug}-${idx}`}
               href={`/projects/${project.slug}`}
-              className="group relative h-[210px] w-[280px] shrink-0 overflow-hidden rounded-[16px] bg-[#d7d7d7] sm:h-[230px] sm:w-[300px] md:h-[248px] md:w-[332px]"
+              className="group relative h-[210px] w-[calc(210px*var(--ratio))] shrink-0 overflow-hidden rounded-[16px] bg-[#d7d7d7] md:h-[248px] md:w-[calc(248px*var(--ratio))]"
+              style={{ "--ratio": ratio }}
             >
               <img
                 src={encodeAsset(project.cover)}
                 alt={project.title}
                 className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                onLoad={onImageLoad(imageKey)}
               />
             </Link>
+              );
+            })()
           ))}
         </div>
       </div>
@@ -106,7 +127,7 @@ function PreviewStrip() {
 export default function HomePage() {
   return (
     <main className="overflow-x-clip bg-[#e9e8e5] text-black">
-      <section className="relative min-h-[96svh]">
+      <section className="relative">
         <HomeHeader />
 
         <motion.div
