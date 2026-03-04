@@ -1,9 +1,9 @@
 import "./globals.css";
 
 export const metadata = {
-  title: "Kate Goncharova — Artsy Portfolio v2",
+  title: "Kate Goncharova — Visual & Product Designer",
   description:
-    "Artsy portfolio of Ekaterina Goncharova — Visual Marketing Designer, UX/UI and AI-Driven Design.",
+    "Visual and product design portfolio by Ekaterina Goncharova.",
   icons: {
     icon: "/resources/favicon.svg",
     shortcut: "/resources/favicon.svg",
@@ -17,7 +17,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link
-          href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Syne:wght@500;700;800&family=Sora:wght@300;400;500;600;700&display=swap"
+          href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Inter:ital,wght@0,400;0,500;0,700;0,800;0,900;1,400&family=Libre+Baskerville:ital,wght@0,400;1,400;1,700&display=swap"
           rel="stylesheet"
         />
       </head>
