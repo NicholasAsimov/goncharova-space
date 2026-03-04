@@ -195,13 +195,13 @@ h1 {
 
 .project-card {
   text-decoration: none;
-  border: 1px solid var(--line);
+  border: 1px solid #2f2b27;
   border-radius: 12px;
   overflow: hidden;
-  background: #121212;
+  background: #111111;
   display: grid;
   grid-template-rows: auto auto;
-  transition: transform 200ms ease, border-color 200ms ease, box-shadow 200ms ease;
+  transition: transform 180ms ease, border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
 }
 
 .project-card.size-feature {
@@ -213,9 +213,15 @@ h1 {
 }
 
 .project-card:hover {
-  transform: translateY(-2px);
-  border-color: #4a453f;
-  box-shadow: 0 14px 24px rgba(0, 0, 0, 0.25);
+  transform: translateY(-3px);
+  border-color: #4e4841;
+  background: #141414;
+  box-shadow: 0 16px 28px rgba(0, 0, 0, 0.28);
+}
+
+.project-card:focus-visible {
+  outline: 2px solid rgba(244, 241, 63, 0.8);
+  outline-offset: 2px;
 }
 
 .project-media {
@@ -235,14 +241,19 @@ h1 {
   object-fit: contain;
   object-position: center;
   display: block;
+  transition: transform 220ms ease;
+}
+
+.project-card:hover .project-media img {
+  transform: scale(1.012);
 }
 
 .project-body {
   padding: 10px 12px 11px;
   display: grid;
-  gap: 8px;
-  min-height: 82px;
-  height: 82px;
+  gap: 7px;
+  min-height: 78px;
+  height: 78px;
   align-content: start;
 }
 
@@ -259,7 +270,7 @@ h1 {
 
 .project-title b {
   font-family: var(--font-body);
-  font-weight: 500;
+  font-weight: 600;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -274,7 +285,7 @@ h1 {
 .project-tags {
   display: flex;
   flex-wrap: nowrap;
-  gap: 6px;
+  gap: 5px;
   min-height: 22px;
   align-items: center;
   overflow: hidden;
@@ -282,9 +293,9 @@ h1 {
 
 .project-tag {
   flex: 0 0 auto;
-  font-size: 0.76rem;
+  font-size: 0.74rem;
   line-height: 1;
-  padding: 4px 7px;
+  padding: 4px 6px;
   border-radius: 4px;
   border: 1px solid #4a453f;
   color: #d8cec2;
