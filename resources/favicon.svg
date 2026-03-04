@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Kate Goncharova favicon">
+  <rect width="64" height="64" rx="14" fill="#0b0b0b" />
+  <rect x="4.5" y="4.5" width="55" height="55" rx="10" fill="none" stroke="#2f2a24" stroke-width="1" />
+  <path d="M22 14v36" stroke="#f5f1ea" stroke-width="4.8" stroke-linecap="round" />
+  <path d="M24.5 31.8l18.2-17.2" stroke="#f5f1ea" stroke-width="4.8" stroke-linecap="round" />
+  <path d="M24.5 31.8l18.2 18.2" stroke="#f5f1ea" stroke-width="4.8" stroke-linecap="round" />
+  <circle cx="50" cy="14" r="2.1" fill="#efe6ad" />
+  <rect x="10" y="52" width="44" height="1" rx="0.5" fill="#2f2a24" />
+</svg>
