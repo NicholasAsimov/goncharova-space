@@ -122,9 +122,10 @@ function toneFor(tag) {
 function renderProjects() {
   projectsRoot.innerHTML = "";
 
-  PROJECTS.forEach((project) => {
+  PROJECTS.forEach((project, index) => {
     const card = document.createElement("a");
-    card.className = "project-card reveal";
+    const layout = index < 2 ? "size-feature" : "size-tile";
+    card.className = `project-card reveal ${layout}`;
     card.href = asset(project.caseStudy);
     card.setAttribute("aria-label", `${project.title} case study`);
 
