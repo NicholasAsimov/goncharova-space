@@ -1,125 +1,148 @@
-const GROUPS = [
+const PROJECTS = [
   {
-    title: "Graphic Design",
-    subtitle: "Posters, layouts, and experimental visuals.",
-    color: "#ffd8c4",
-    items: [
-      ["Typographic Poster Designs", "Poster Series", "resources/notion_portfolio/Portfolio - Kate/Projects/Typographic Poster Designs/Anxiety-Poster.jpg"],
-      ["Typographic Poster Designs", "Poster Series", "resources/notion_portfolio/Portfolio - Kate/Projects/Typographic Poster Designs/Scream.jpg"],
-      ["Experimental Poster Design", "Experimental", "resources/notion_portfolio/Portfolio - Kate/Projects/Experimental Poster Design/Panic-Disorder.png"],
-      ["Experimental Poster Design", "Experimental", "resources/notion_portfolio/Portfolio - Kate/Projects/Experimental Poster Design/Social-Anxiety.png"],
-      ["MoreMoneyMoreLove", "Email Design", "resources/notion_portfolio/Portfolio - Kate/Projects/MoreMoneyMoreLove (Email Newsletter)/first.png"],
-      ["Spin Records - Vinyl Website", "Web Visual", "resources/notion_portfolio/Portfolio - Kate/Projects/Spin Records - Vinyl Website/image 14.png"],
-    ],
+    title: "Social Media Projects",
+    icon: "🧑🏼‍💻",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/Social Media Projects/2834c4e7-9605-4a34-824d-1fc06a1c8a14.png",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/Social Media Projects 313f27ef1ff780618a65cc147471906f.html",
+    tags: ["Branding", "Social media"],
   },
   {
-    title: "SMM",
-    subtitle: "Content systems, social feeds, and campaign visuals.",
-    color: "#ffe7b5",
-    items: [
-      ["Social Media Projects", "Brand Feed", "resources/notion_portfolio/Portfolio - Kate/Projects/Social Media Projects/Screenshot_2025-11-24_at_23.45.27.png"],
-      ["Social Media Projects", "Brand Feed", "resources/notion_portfolio/Portfolio - Kate/Projects/Social Media Projects/Screenshot_2026-02-26_at_15.10.23.png"],
-      ["Social Media Projects", "Campaign", "resources/notion_portfolio/Portfolio - Kate/Projects/Social Media Projects/2834c4e7-9605-4a34-824d-1fc06a1c8a14.png"],
-      ["Social Media Projects", "Reels/Stories", "resources/notion_portfolio/Portfolio - Kate/Projects/Social Media Projects/8.png"],
-      ["Firstmovr x Colgate-Palmolive", "Social Creative", "resources/notion_portfolio/Portfolio - Kate/Projects/Firstmovr x Colgate-Palmolive/image 7.png"],
-      ["Firstmovr x Colgate-Palmolive", "Social Creative", "resources/notion_portfolio/Portfolio - Kate/Projects/Firstmovr x Colgate-Palmolive/image 3.png"],
-    ],
+    title: "Spin Records - Vinyl Website",
+    icon: "📀",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/Spin Records - Vinyl Website/image.png",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/Spin Records - Vinyl Website 310f27ef1ff78098865bfe0a372ee456.html",
+    tags: ["Graphic design", "Website Design"],
   },
   {
-    title: "Branding",
-    subtitle: "Identity systems and branded assets.",
-    color: "#d7efd7",
-    items: [
-      ["The soul codes - Logo", "Logo System", "resources/notion_portfolio/Portfolio - Kate/Projects/The soul codes - Logo/the_soul_codes_mockup_list_(1).png"],
-      ["The soul codes - Logo", "Logo System", "resources/notion_portfolio/Portfolio - Kate/Projects/The soul codes - Logo/The_soul_codes_mockup_(1).png"],
-      ["Future Lab Merchandise", "Merch", "resources/notion_portfolio/Portfolio - Kate/Projects/Future Lab Merchandise/Tote-Bag-Green-3_11zon.jpg"],
-      ["Future Lab Merchandise", "Merch", "resources/notion_portfolio/Portfolio - Kate/Projects/Future Lab Merchandise/Tote-Bag-Orange-3_11zon.jpg"],
-      ["Elara jewellery website", "Brand + Web", "resources/notion_portfolio/Portfolio - Kate/Projects/Elara jewellery website/Main_ready.png"],
-      ["Spin Records - Vinyl Website", "Brand + Web", "resources/notion_portfolio/Portfolio - Kate/Projects/Spin Records - Vinyl Website/image 15.png"],
-    ],
+    title: "Finance app",
+    icon: "💵",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/Finance app/image.png",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/Finance app 310f27ef1ff780b78db8dae164b68a19.html",
+    tags: ["UX/UI", "Application design"],
   },
   {
-    title: "AI-Driven Design",
-    subtitle: "Prompted generation refined into production-ready visuals.",
-    color: "#d7e8ff",
-    items: [
-      ["Firstmovr x Colgate-Palmolive", "AI Campaign", "resources/notion_portfolio/Portfolio - Kate/Projects/Firstmovr x Colgate-Palmolive/image 10.png"],
-      ["Firstmovr x Colgate-Palmolive", "AI Campaign", "resources/notion_portfolio/Portfolio - Kate/Projects/Firstmovr x Colgate-Palmolive/image 8.png"],
-      ["Firstmovr x Colgate-Palmolive", "AI Campaign", "resources/notion_portfolio/Portfolio - Kate/Projects/Firstmovr x Colgate-Palmolive/image 5.png"],
-      ["Experimental Poster Design", "AI Poster", "resources/notion_portfolio/Portfolio - Kate/Projects/Experimental Poster Design/Posters-1.webp"],
-      ["Experimental Poster Design", "AI Poster", "resources/notion_portfolio/Portfolio - Kate/Projects/Experimental Poster Design/Claustrophobia.png"],
-    ],
+    title: "CuriVerse",
+    icon: "🔮",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/CuriVerse/image.png",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/CuriVerse 30bf27ef1ff7807abb01fe3c9d99e29e.html",
+    tags: ["UX/UI", "Application design", "Mobile app"],
   },
   {
-    title: "UX/UI",
-    subtitle: "Interface and product design studies.",
-    color: "#eadcff",
-    items: [
-      ["Linn Plakat - event app", "App Design", "resources/notion_portfolio/Portfolio - Kate/Projects/Linn Plakat - event app/MAIN.png"],
-      ["CuriVerse", "Mobile App", "resources/notion_portfolio/Portfolio - Kate/Projects/CuriVerse/image 7.png"],
-      ["Finance app", "Product UI", "resources/notion_portfolio/Portfolio - Kate/Projects/Finance app/image 11.png"],
-      ["Onsual", "Website + App", "resources/notion_portfolio/Portfolio - Kate/Projects/Onsual/image 4.png"],
-      ["EduFlex-Code8 Hackathon", "Dashboard", "resources/notion_portfolio/Portfolio - Kate/Projects/EduFlex-Code8 Hackathon/Final.png"],
-      ["Elara jewellery website", "E-commerce UI", "resources/notion_portfolio/Portfolio - Kate/Projects/Elara jewellery website/Screens.png"],
-    ],
+    title: "Onsual",
+    icon: "❇️",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/Onsual/image.png",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/Onsual 2c3f27ef1ff780debd52e557763365a5.html",
+    tags: ["UX/UI", "Website Design", "iOS app"],
+  },
+  {
+    title: "Firstmovr x Colgate-Palmolive",
+    icon: "🦷",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/Firstmovr x Colgate-Palmolive/image 7.png",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/Firstmovr x Colgate-Palmolive 2c3f27ef1ff7809687c1d196a70be691.html",
+    tags: ["AI Generation", "Branding", "Social media"],
+  },
+  {
+    title: "Future Lab Merchandise",
+    icon: "👕",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/Future Lab Merchandise/image.png",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/Future Lab Merchandise 2b5f27ef1ff780749668de1cc502ef97.html",
+    tags: ["Branding"],
+  },
+  {
+    title: "Typographic Poster Designs",
+    icon: "👀",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/Typographic Poster Designs/Free_Poster_Frame_Mockup_2.jpg",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/Typographic Poster Designs 2b5f27ef1ff7802c8fcdc80f068b9cd0.html",
+    tags: ["Graphic design"],
+  },
+  {
+    title: "Experimental Poster Design",
+    icon: "🔖",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/Experimental Poster Design/Posters-1.webp",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/Experimental Poster Design 210f27ef1ff78036b2dac812a478733a.html",
+    tags: ["Midjourney", "Graphic design"],
+  },
+  {
+    title: "MoreMoneyMoreLove (Email Newsletter)",
+    icon: "📩",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/MoreMoneyMoreLove (Email Newsletter)/first.png",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/MoreMoneyMoreLove (Email Newsletter) 174f27ef1ff780738893f1ff60853fea.html",
+    tags: ["Graphic design", "E-commerce"],
+  },
+  {
+    title: "Linn Plakat - event app",
+    icon: "🎪",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/Linn Plakat - event app/MAIN.png",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/Linn Plakat - event app 34999bc414ca4ae6b3a06be35d1edba0.html",
+    tags: ["UX/UI", "Mobile app", "iOS app"],
+  },
+  {
+    title: "Elara jewellery website",
+    icon: "💍",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/Elara jewellery website/Main_ready.png",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/Elara jewellery website 4b5a8c6c92384a3380cfec06cd57074e.html",
+    tags: ["UX/UI", "Website Design", "E-commerce"],
+  },
+  {
+    title: "EduFlex-Code8 Hackathon",
+    icon: "💡",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/EduFlex-Code8 Hackathon/Launchscreen_and_onboarding_(1).png",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/EduFlex-Code8 Hackathon faecb7aebd9f488e9f5b2eea7f4749e9.html",
+    tags: ["UX/UI", "Mobile app", "Dashboard"],
+  },
+  {
+    title: "The soul codes - Logo",
+    icon: "〰️",
+    image: "resources/notion_portfolio/Portfolio - Kate/Projects/The soul codes - Logo/the_soul_codes_mockup_list_(1).png",
+    caseStudy: "resources/notion_portfolio/Portfolio - Kate/Projects/The soul codes - Logo 80a867de3757433ea1afb6782296ff97.html",
+    tags: ["Graphic design", "Logo", "Social media"],
   },
 ];
 
-const groupsRoot = document.getElementById("groups");
+const projectsRoot = document.getElementById("groups");
 
 function asset(path) {
   return encodeURI(path);
 }
 
-function pickClass(ratio) {
-  if (ratio >= 1.75) return "wide";
-  if (ratio >= 1.15) return "landscape";
-  if (ratio <= 0.85) return "portrait";
-  return "square";
+function toneFor(tag) {
+  const t = tag.toLowerCase();
+  if (t.includes("social")) return "social";
+  if (t.includes("branding")) return "branding";
+  if (t.includes("graphic")) return "graphic";
+  if (t.includes("ux/ui") || t.includes("ux")) return "ux";
+  if (t.includes("app") || t.includes("ios")) return "app";
+  if (t.includes("website") || t.includes("web")) return "web";
+  if (t.includes("ai") || t.includes("midjourney")) return "ai";
+  if (t.includes("dashboard")) return "dashboard";
+  if (t.includes("logo")) return "logo";
+  return "default";
 }
 
-function renderGroups() {
-  groupsRoot.innerHTML = "";
+function renderProjects() {
+  projectsRoot.innerHTML = "";
 
-  GROUPS.forEach((group, groupIndex) => {
-    const section = document.createElement("section");
-    section.className = `group ${groupIndex % 2 ? "rhythm-b" : "rhythm-a"}`;
+  PROJECTS.forEach((project) => {
+    const card = document.createElement("a");
+    card.className = "project-card reveal";
+    card.href = asset(project.caseStudy);
+    card.setAttribute("aria-label", `${project.title} case study`);
 
-    const panel = document.createElement("aside");
-    panel.className = "group-panel reveal";
-    panel.style.background = group.color;
-    panel.innerHTML = `
-      <small class="group-index">${String(groupIndex + 1).padStart(2, "0")}</small>
-      <h3>${group.title}</h3>
-      <p>${group.subtitle}</p>
+    const tags = project.tags
+      .map((tag) => `<span class="project-tag" data-tone="${toneFor(tag)}">${tag}</span>`)
+      .join("");
+
+    card.innerHTML = `
+      <figure class="project-media">
+        <img src="${asset(project.image)}" alt="${project.title}" loading="lazy" />
+      </figure>
+      <div class="project-body">
+        <p class="project-title"><span class="project-icon">${project.icon}</span><b>${project.title}</b></p>
+        <div class="project-tags">${tags}</div>
+      </div>
     `;
 
-    const wall = document.createElement("div");
-    wall.className = "group-wall";
-
-    group.items.forEach(([project, label, path], index) => {
-      const figure = document.createElement("figure");
-      figure.className = "piece reveal";
-      if (index === 0) figure.classList.add("hero");
-
-      figure.innerHTML = `
-        <img src="${asset(path)}" alt="${project}" loading="lazy" />
-        <figcaption><strong>${project}</strong><span>${label}</span></figcaption>
-      `;
-
-      if (index > 0) {
-        const img = figure.querySelector("img");
-        img.addEventListener("load", () => {
-          const ratio = img.naturalWidth / img.naturalHeight;
-          figure.classList.add(pickClass(ratio));
-        });
-      }
-
-      wall.append(figure);
-    });
-
-    section.append(panel, wall);
-    groupsRoot.append(section);
+    projectsRoot.append(card);
   });
 }
 
@@ -127,10 +150,9 @@ function setupReveal() {
   const observer = new IntersectionObserver(
     (entries) => {
       entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("in");
-          observer.unobserve(entry.target);
-        }
+        if (!entry.isIntersecting) return;
+        entry.target.classList.add("in");
+        observer.unobserve(entry.target);
       });
     },
     { threshold: 0.1 }
@@ -139,5 +161,5 @@ function setupReveal() {
   document.querySelectorAll(".reveal").forEach((el) => observer.observe(el));
 }
 
-renderGroups();
+renderProjects();
 setupReveal();
