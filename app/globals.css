@@ -80,7 +80,8 @@
   }
 
   .marquee-track {
-    animation: marquee 32s linear infinite;
+    animation: marquee 62s linear infinite;
+    will-change: transform;
   }
 }
 

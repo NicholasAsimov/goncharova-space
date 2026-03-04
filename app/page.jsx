@@ -1,20 +1,29 @@
 "use client";
 
 import Link from "next/link";
+import { motion } from "framer-motion";
 import { encodeAsset, getAllProjects } from "@/lib/projects";
 
 const PROJECTS = getAllProjects();
 
-const HOME_PREVIEWS = PROJECTS.filter((project) =>
+const HOME_MARQUEE = PROJECTS.filter((project) =>
   [
+    "firstmovr-colgate-palmolive",
     "social-media-projects",
+    "future-lab-merchandise",
+    "typographic-poster-designs",
+    "experimental-poster-design",
+    "moremoneymorelove-email-newsletter",
     "spin-records-vinyl-website",
     "finance-app",
     "curiverse",
     "onsual",
-    "firstmovr-colgate-palmolive",
+    "linn-plakat-event-app",
+    "elara-jewellery-website",
   ].includes(project.slug),
 );
+
+const EASE_OUT_EXPO = [0.22, 1, 0.36, 1];
 
 function RainbowMark() {
   return (
@@ -39,7 +48,12 @@ function BagMark() {
 
 function HomeHeader() {
   return (
-    <header className="pt-8 md:pt-9">
+    <motion.header
+      className="pt-8 md:pt-9"
+      initial={{ opacity: 0, y: -16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7, ease: EASE_OUT_EXPO }}
+    >
       <div className="mx-auto flex w-full max-w-[340px] items-center justify-center gap-7 text-[22px] leading-none text-[#ff3b30] md:gap-8">
         <Link href="/works" className="text-sm font-medium lowercase tracking-[-0.01em] hover:opacity-70">
           works
@@ -53,31 +67,39 @@ function HomeHeader() {
           garden
         </Link>
       </div>
-    </header>
+    </motion.header>
   );
 }
 
 function PreviewStrip() {
+  const trackItems = [...HOME_MARQUEE, ...HOME_MARQUEE];
+
   return (
-    <section className="relative border-t border-black/10 bg-black pt-0 pb-10 md:pb-16">
-      <div className="mx-auto -mt-8 w-full max-w-[1540px] px-2 md:-mt-10 md:px-4">
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {HOME_PREVIEWS.map((project) => (
+    <motion.section
+      className="relative pb-12 md:pb-16"
+      initial={{ opacity: 0, y: 24 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, amount: 0.25 }}
+      transition={{ duration: 0.75, ease: EASE_OUT_EXPO }}
+    >
+      <div className="relative mx-auto mt-8 w-full overflow-hidden md:mt-10">
+        <div className="marquee-track flex w-max gap-3 pl-2 md:gap-4 md:pl-4">
+          {trackItems.map((project, idx) => (
             <Link
-              key={project.slug}
+              key={`${project.slug}-${idx}`}
               href={`/projects/${project.slug}`}
-              className="group overflow-hidden rounded-[16px] border border-white/10 bg-[#1d1d1d]"
+              className="group relative h-[210px] w-[280px] shrink-0 overflow-hidden rounded-[16px] bg-[#d7d7d7] sm:h-[230px] sm:w-[300px] md:h-[248px] md:w-[332px]"
             >
               <img
                 src={encodeAsset(project.cover)}
                 alt={project.title}
-                className="h-[190px] w-full object-cover transition duration-700 group-hover:scale-105 md:h-[210px]"
+                className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
               />
             </Link>
           ))}
         </div>
       </div>
-    </section>
+    </motion.section>
   );
 }
 
@@ -87,53 +109,97 @@ export default function HomePage() {
       <section className="relative min-h-[96svh]">
         <HomeHeader />
 
-        <div
+        <motion.div
           className="pointer-events-none absolute -left-[132px] top-[164px] w-[360px] sm:-left-[104px] sm:w-[460px] md:-left-[44px] md:top-[146px] md:w-[592px]"
           aria-hidden="true"
+          initial={{ opacity: 0, x: -80, scale: 0.94 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          transition={{ duration: 1.05, delay: 0.12, ease: EASE_OUT_EXPO }}
         >
           <img src="/resources/reference/flower-blue.svg" alt="" className="h-auto w-full" />
-        </div>
-        <div
+        </motion.div>
+        <motion.div
           className="pointer-events-none absolute -right-[132px] top-[162px] w-[360px] sm:-right-[104px] sm:w-[460px] md:-right-[44px] md:top-[144px] md:w-[592px]"
           aria-hidden="true"
+          initial={{ opacity: 0, x: 80, scale: 0.94 }}
+          animate={{ opacity: 1, x: 0, scale: 1 }}
+          transition={{ duration: 1.05, delay: 0.12, ease: EASE_OUT_EXPO }}
         >
           <img src="/resources/reference/flower-red.svg" alt="" className="h-auto w-full" />
-        </div>
+        </motion.div>
 
-        <div className="relative z-10 mx-auto mt-10 w-full max-w-[600px] px-5 text-center md:mt-11">
-          <RainbowMark />
-          <p className="mt-2 text-[18px] font-medium tracking-[-0.03em]">Hi, I&apos;m Kate</p>
+        <motion.div
+          className="relative z-10 mx-auto mt-10 w-full max-w-[600px] px-5 text-center md:mt-11"
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: {},
+            visible: {
+              transition: { staggerChildren: 0.1, delayChildren: 0.2 },
+            },
+          }}
+        >
+          <motion.div variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }} transition={{ duration: 0.65, ease: EASE_OUT_EXPO }}>
+            <RainbowMark />
+          </motion.div>
+          <motion.p
+            className="mt-2 text-[18px] font-medium tracking-[-0.03em]"
+            variants={{ hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.65, ease: EASE_OUT_EXPO }}
+          >
+            Hi, I&apos;m Kate
+          </motion.p>
 
-          <h1 className="mt-3 font-serif text-[44px] leading-[1.05] tracking-[-0.6px] text-black sm:text-[52px] sm:leading-[1.06] md:text-[56px] md:leading-[1.08] xl:text-[60px] xl:leading-[70px] xl:tracking-[-0.8px]">
+          <motion.h1
+            className="mt-3 font-serif text-[44px] leading-[1.05] tracking-[-0.6px] text-black sm:text-[52px] sm:leading-[1.06] md:text-[56px] md:leading-[1.08] xl:text-[60px] xl:leading-[70px] xl:tracking-[-0.8px]"
+            variants={{ hidden: { opacity: 0, y: 24 }, visible: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.8, ease: EASE_OUT_EXPO }}
+          >
             Visual and
             <br />
             Product designer
             <br />
             <span className="whitespace-nowrap">you can count on</span>
-          </h1>
+          </motion.h1>
 
-          <p className="mx-auto mt-5 max-w-[522px] text-[16px] leading-[1.4] tracking-[-0.03em] text-[#444] sm:text-[18px]">
+          <motion.p
+            className="mx-auto mt-5 max-w-[522px] text-[16px] leading-[1.4] tracking-[-0.03em] text-[#444] sm:text-[18px]"
+            variants={{ hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.7, ease: EASE_OUT_EXPO }}
+          >
             Simplicity is my superpower. I turn complex ideas into
             <br className="hidden md:block" />
             experiences users love and investors trust. I help SaaS, AI, and
             <br className="hidden md:block" />
             Dev founders craft story-driven brands and products.
-          </p>
+          </motion.p>
 
-          <div className="mx-auto mt-6 h-px w-full max-w-[600px] border-t border-dashed border-black/14" />
+          <motion.div
+            className="mx-auto mt-6 h-px w-full max-w-[600px] border-t border-dashed border-black/14"
+            variants={{ hidden: { opacity: 0, scaleX: 0.84 }, visible: { opacity: 1, scaleX: 1 } }}
+            transition={{ duration: 0.6, ease: EASE_OUT_EXPO }}
+          />
 
-          <a
+          <motion.a
             href="mailto:ekaterinagoncharovaa@gmail.com"
             className="mt-7 inline-flex min-w-[158px] items-center justify-center rounded-[24px] bg-black px-5 py-[9px] text-[18px] font-medium leading-[1.4] text-white transition hover:opacity-85"
+            variants={{ hidden: { opacity: 0, y: 18 }, visible: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.65, ease: EASE_OUT_EXPO }}
+            whileHover={{ y: -2 }}
+            whileTap={{ scale: 0.98 }}
           >
             Chat with me
-          </a>
+          </motion.a>
 
-          <div className="mt-16">
+          <motion.div
+            className="mt-16"
+            variants={{ hidden: { opacity: 0, y: 22 }, visible: { opacity: 1, y: 0 } }}
+            transition={{ duration: 0.72, ease: EASE_OUT_EXPO }}
+          >
             <BagMark />
             <p className="mt-2 font-serif text-[24px] leading-[36px] tracking-[-0.4px]">Step into my digital home</p>
-          </div>
-        </div>
+          </motion.div>
+        </motion.div>
       </section>
 
       <PreviewStrip />
