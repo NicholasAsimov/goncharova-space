@@ -19,8 +19,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    env:
-      NEXT_TELEMETRY_DISABLED: "1"
 
     steps:
       - name: Checkout
@@ -33,32 +31,27 @@ jobs:
           cache: npm
           cache-dependency-path: package-lock.json
 
-      - name: Cache Next build cache
-        uses: actions/cache@v4
-        with:
-          path: .next/cache
-          key: ${{ runner.os }}-next-${{ hashFiles('package-lock.json') }}-${{ hashFiles('app/**/*.{js,jsx,ts,tsx,css}', 'components/**/*.{js,jsx,ts,tsx}', 'lib/**/*.{js,jsx,ts,tsx}', 'next.config.mjs', 'postcss.config.mjs') }}
-          restore-keys: |
-            ${{ runner.os }}-next-${{ hashFiles('package-lock.json') }}-
-
       - name: Install dependencies
         run: npm ci --prefer-offline --no-audit
 
       - name: Lint
         run: npm run lint
 
+      - name: Type check
+        run: npm run check
+
       - name: Build static site
         run: npm run build
 
       - name: Add .nojekyll
         if: github.event_name != 'pull_request'
-        run: touch out/.nojekyll
+        run: touch dist/.nojekyll
 
       - name: Upload artifact
         if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v3
         with:
-          path: out
+          path: dist
 
   deploy:
     if: github.event_name != 'pull_request'
