@@ -1,6 +1,7 @@
 import { A, Route, Router, useLocation, useParams } from "@solidjs/router";
 import { For, Show, createEffect } from "solid-js";
 import type { JSX, ParentProps } from "solid-js";
+import AdminPage from "./admin/AdminPage";
 import {
   asset,
   getRealmBySlug,
@@ -13,10 +14,15 @@ import {
 
 function RootShell(props: ParentProps) {
   const location = useLocation();
+  const isAdmin = () => location.pathname === "/admin";
 
   createEffect(() => {
     const path = location.pathname;
     let title = "Kate Goncharova — Living Studio";
+
+    if (path === "/admin") {
+      title = "Kate Goncharova — Curation Admin";
+    }
 
     if (path.startsWith("/realm/")) {
       const slug = path.replace("/realm/", "");
@@ -34,24 +40,31 @@ function RootShell(props: ParentProps) {
   });
 
   return (
-    <div class="site-shell">
-      <div class="ambient ambient-left" aria-hidden="true" />
-      <div class="ambient ambient-right" aria-hidden="true" />
-      <header class="site-header">
+    <div class={`site-shell ${isAdmin() ? "site-shell-admin" : ""}`}>
+      <Show when={!isAdmin()}>
+        <div class="ambient ambient-left" aria-hidden="true" />
+        <div class="ambient ambient-right" aria-hidden="true" />
+      </Show>
+      <header class={`site-header ${isAdmin() ? "site-header-admin" : ""}`}>
         <A href="/" class="wordmark">
           kate
         </A>
-        <nav class="site-nav" aria-label="Primary">
-          <For each={getRealms()}>
-            {(realm) => (
-              <A href={`/realm/${realm.slug}`} class="nav-link">
-                {realm.name}
-              </A>
-            )}
-          </For>
-        </nav>
+        <Show
+          when={!isAdmin()}
+          fallback={<div class="admin-header-label">local curation admin</div>}
+        >
+          <nav class="site-nav" aria-label="Primary">
+            <For each={getRealms()}>
+              {(realm) => (
+                <A href={`/realm/${realm.slug}`} class="nav-link">
+                  {realm.name}
+                </A>
+              )}
+            </For>
+          </nav>
+        </Show>
       </header>
-      <main>{props.children}</main>
+      <main class={`site-main ${isAdmin() ? "site-main-admin" : ""}`}>{props.children}</main>
     </div>
   );
 }
@@ -323,6 +336,7 @@ export default function App(): JSX.Element {
   return (
     <Router root={RootShell}>
       <Route path="/" component={HomePage} />
+      <Route path="/admin" component={AdminPage} />
       <Route path="/realm/:realmSlug" component={RealmPage} />
       <Route path="/work/:workSlug" component={WorkPage} />
       <Route path="*all" component={NotFoundPage} />
