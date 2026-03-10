@@ -1,5 +1,5 @@
 import { A, Route, Router, useLocation, useParams } from "@solidjs/router";
-import { For, Show, createEffect } from "solid-js";
+import { For, Show, createEffect, createSignal, onCleanup } from "solid-js";
 import type { JSX, ParentProps } from "solid-js";
 import AdminPage from "./admin/AdminPage";
 import type { CaseStudyBlock, RichTextSpan } from "./data/schema";
@@ -242,16 +242,74 @@ function renderRichText(spans: RichTextSpan[]): JSX.Element[] {
   });
 }
 
+function richTextToPlainText(spans: RichTextSpan[]): string {
+  return spans
+    .map((span) => (span.break ? " " : span.text ?? ""))
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
+function groupCaseStudyBlocks(blocks: CaseStudyBlock[]) {
+  const sections: { chapter: boolean; blocks: CaseStudyBlock[] }[] = [];
+  let current: { chapter: boolean; blocks: CaseStudyBlock[] } | null = null;
+
+  for (const block of blocks) {
+    const isChapterStart = block.type === "heading" && block.level === 1;
+
+    if (!current || isChapterStart) {
+      if (current && current.blocks.length > 0) {
+        sections.push(current);
+      }
+      current = { chapter: isChapterStart, blocks: [block] };
+      continue;
+    }
+
+    current.blocks.push(block);
+  }
+
+  if (current && current.blocks.length > 0) {
+    sections.push(current);
+  }
+
+  return sections;
+}
+
+function renderImageFigure(
+  block: Extract<CaseStudyBlock, { type: "image" }>,
+): JSX.Element {
+  return (
+    <figure class="case-study-figure">
+      <img src={asset(block.media.src)} alt={block.media.alt} />
+      <Show when={block.media.caption}>
+        <figcaption>{block.media.caption}</figcaption>
+      </Show>
+    </figure>
+  );
+}
+
 function renderCaseStudyBlock(block: CaseStudyBlock): JSX.Element {
   switch (block.type) {
     case "heading":
       if (block.level === 1) {
-        return <h2 class="case-study-heading case-study-heading-h1">{renderRichText(block.content)}</h2>;
+        return (
+          <h2 class="case-study-heading case-study-heading-h1">
+            {renderRichText(block.content)}
+          </h2>
+        );
       }
       if (block.level === 2) {
-        return <h3 class="case-study-heading case-study-heading-h2">{renderRichText(block.content)}</h3>;
+        return (
+          <h3 class="case-study-heading case-study-heading-h2">
+            {renderRichText(block.content)}
+          </h3>
+        );
       }
-      return <h4 class="case-study-heading case-study-heading-h3">{renderRichText(block.content)}</h4>;
+      return (
+        <h4 class="case-study-heading case-study-heading-h3">
+          {renderRichText(block.content)}
+        </h4>
+      );
     case "paragraph":
       return <p class="case-study-paragraph">{renderRichText(block.content)}</p>;
     case "list":
@@ -263,73 +321,185 @@ function renderCaseStudyBlock(block: CaseStudyBlock): JSX.Element {
         </ul>
       );
     case "image":
-      return (
-        <figure class="case-study-figure">
-          <img src={asset(block.media.src)} alt={block.media.alt} />
-          <Show when={block.media.caption}>
-            <figcaption>{block.media.caption}</figcaption>
-          </Show>
-        </figure>
-      );
+      return renderImageFigure(block);
     case "divider":
       return <hr class="case-study-divider" />;
   }
+}
+
+function renderCaseStudySection(section: {
+  chapter: boolean;
+  blocks: CaseStudyBlock[];
+}): JSX.Element {
+  const nodes: JSX.Element[] = [];
+  let imageGroup: Extract<CaseStudyBlock, { type: "image" }>[] = [];
+
+  const flushImages = () => {
+    if (imageGroup.length === 0) return;
+
+    if (imageGroup.length === 1) {
+      nodes.push(renderImageFigure(imageGroup[0]));
+    } else {
+      const galleryClass =
+        imageGroup.length === 2
+          ? "case-study-gallery-pair"
+          : imageGroup.length === 3
+            ? "case-study-gallery-triptych"
+            : "case-study-gallery-grid";
+
+      nodes.push(
+        <div class={`case-study-gallery ${galleryClass}`}>
+          <For each={imageGroup}>{(block) => renderImageFigure(block)}</For>
+        </div>,
+      );
+    }
+
+    imageGroup = [];
+  };
+
+  for (const block of section.blocks) {
+    if (block.type === "image") {
+      imageGroup.push(block);
+      continue;
+    }
+
+    flushImages();
+    nodes.push(renderCaseStudyBlock(block));
+  }
+
+  flushImages();
+
+  return (
+    <section
+      class={`case-study-section ${section.chapter ? "case-study-section-chapter" : ""}`}
+    >
+      {nodes}
+    </section>
+  );
 }
 
 function WorkPage() {
   const params = useParams();
   const workSlug = () => params.workSlug ?? "";
   const work = () => getWorkBySlug(workSlug());
+  const [heroSlideIndex, setHeroSlideIndex] = createSignal(0);
+
+  createEffect(() => {
+    const resolved = work();
+    if (!resolved) return;
+
+    setHeroSlideIndex(0);
+
+    const slides = resolved.media.slice(0, 5);
+    if (slides.length < 2) return;
+
+    const timer = window.setInterval(() => {
+      setHeroSlideIndex((current) => (current + 1) % slides.length);
+    }, 4500);
+
+    onCleanup(() => window.clearInterval(timer));
+  });
 
   return (
     <Show when={work()} fallback={<NotFoundPage />}>
       {(resolvedWork) => {
         const realm = () => getRealmBySlug(resolvedWork().realmSlug);
         const related = () => getRelatedWorks(resolvedWork().slug);
+        const heroSlides = () => resolvedWork().media.slice(0, 5);
+        const caseStudySections = () => groupCaseStudyBlocks(displayBlocks());
+        const displayBlocks = () => {
+          const blocks = [...(resolvedWork().blocks ?? [])];
+
+          if (
+            blocks[0]?.type === "heading" &&
+            richTextToPlainText(blocks[0].content).toLowerCase() === "cover"
+          ) {
+            blocks.shift();
+          }
+
+          if (
+            blocks[0]?.type === "image" &&
+            blocks[0].media.src === resolvedWork().media[0].src
+          ) {
+            blocks.shift();
+          }
+
+          while (blocks[0]?.type === "divider") {
+            blocks.shift();
+          }
+
+          return blocks;
+        };
 
         return (
           <div class="page page-work">
             <section class="work-hero">
-              <div class="work-meta">
-                <p class="eyebrow">
-                  <Show when={realm()}>
-                    {(resolvedRealm) => (
-                      <A href={`/realm/${resolvedRealm().slug}`}>
-                        {resolvedRealm().name}
-                      </A>
+              <div class="work-hero-gallery">
+                <div class="work-hero-stage">
+                  <For each={heroSlides()}>
+                    {(media, index) => (
+                      <figure
+                        class={`work-hero-media ${index() === heroSlideIndex() ? "is-active" : ""}`}
+                      >
+                        <img src={asset(media.src)} alt={media.alt} />
+                      </figure>
                     )}
-                  </Show>
-                </p>
-                <h1>{resolvedWork().title}</h1>
-                <p class="work-summary">{resolvedWork().summary}</p>
-                <div class="tag-row">
-                  <span>{resolvedWork().year}</span>
-                  <span>{resolvedWork().medium}</span>
-                  <For each={resolvedWork().tags}>
-                    {(tag) => <span>{tag}</span>}
                   </For>
+
+                  <Show when={heroSlides().length > 1}>
+                    <div class="work-hero-progress" aria-label="Gallery slides">
+                      <For each={heroSlides()}>
+                        {(_, index) => (
+                          <button
+                            type="button"
+                            class={`work-hero-dot ${index() === heroSlideIndex() ? "is-active" : ""}`}
+                            aria-label={`Show slide ${index() + 1}`}
+                            aria-pressed={index() === heroSlideIndex()}
+                            onClick={() => setHeroSlideIndex(index())}
+                          />
+                        )}
+                      </For>
+                    </div>
+                  </Show>
                 </div>
-                <Show when={resolvedWork().archiveHref}>
-                  <a
-                    class="button"
-                    href={asset(resolvedWork().archiveHref!)}
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    Open original archive
-                  </a>
-                </Show>
               </div>
-              <figure class="work-hero-media">
-                <img
-                  src={asset(resolvedWork().media[0].src)}
-                  alt={resolvedWork().media[0].alt}
-                />
-              </figure>
+
+              <div class="work-meta">
+                <div class="work-meta-main">
+                  <p class="eyebrow">
+                    <Show when={realm()}>
+                      {(resolvedRealm) => (
+                        <A href={`/realm/${resolvedRealm().slug}`}>
+                          {resolvedRealm().name}
+                        </A>
+                      )}
+                    </Show>
+                  </p>
+                  <h1>{resolvedWork().title}</h1>
+                  <p class="work-summary">{resolvedWork().summary}</p>
+                </div>
+                <div class="work-meta-side">
+                  <dl class="work-facts">
+                    <div>
+                      <dt>Year</dt>
+                      <dd>{resolvedWork().year}</dd>
+                    </div>
+                    <div>
+                      <dt>Medium</dt>
+                      <dd>{resolvedWork().medium}</dd>
+                    </div>
+                  </dl>
+                  <div class="work-tag-cluster">
+                    <For each={resolvedWork().tags}>
+                      {(tag) => <span>{tag}</span>}
+                    </For>
+                  </div>
+                </div>
+              </div>
             </section>
 
             <Show
-              when={resolvedWork().blocks && resolvedWork().blocks!.length > 0}
+              when={displayBlocks().length > 0}
               fallback={
                 <section class="media-mosaic">
                   <For each={resolvedWork().media.slice(1)}>
@@ -346,8 +516,8 @@ function WorkPage() {
               }
             >
               <section class="case-study-flow">
-                <For each={resolvedWork().blocks}>
-                  {(block) => renderCaseStudyBlock(block)}
+                <For each={caseStudySections()}>
+                  {(section) => renderCaseStudySection(section)}
                 </For>
               </section>
             </Show>
