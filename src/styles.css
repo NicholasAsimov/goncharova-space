@@ -505,6 +505,94 @@ button:disabled {
   margin-top: 1.25rem;
 }
 
+.case-study-flow {
+  max-width: 54rem;
+  margin: 1.5rem auto 0;
+  display: grid;
+  gap: 1rem;
+}
+
+.case-study-heading,
+.case-study-paragraph,
+.case-study-list,
+.case-study-figure {
+  border-radius: 1.7rem;
+  background: rgba(255, 253, 248, 0.82);
+  border: 1px solid rgba(31, 26, 23, 0.08);
+  box-shadow: var(--shadow);
+}
+
+.case-study-heading,
+.case-study-paragraph,
+.case-study-list {
+  padding: 1.25rem;
+}
+
+.case-study-heading {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-weight: 600;
+}
+
+.case-study-heading-h1 {
+  font-size: clamp(2.3rem, 5vw, 3.3rem);
+}
+
+.case-study-heading-h2 {
+  font-size: clamp(1.9rem, 4vw, 2.7rem);
+}
+
+.case-study-heading-h3 {
+  font-size: clamp(1.45rem, 3vw, 2rem);
+}
+
+.case-study-paragraph,
+.case-study-list {
+  margin: 0;
+  line-height: 1.7;
+}
+
+.case-study-paragraph strong,
+.case-study-list strong,
+.case-study-heading strong {
+  font-weight: 700;
+}
+
+.case-study-paragraph a,
+.case-study-list a,
+.case-study-heading a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.case-study-list {
+  padding-left: 2.4rem;
+}
+
+.case-study-figure {
+  overflow: hidden;
+  margin: 0;
+}
+
+.case-study-figure img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.case-study-figure figcaption {
+  padding: 1rem 1.25rem 1.2rem;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.case-study-divider {
+  width: min(16rem, 100%);
+  border: none;
+  border-top: 1px solid var(--line);
+  margin: 0.2rem auto;
+}
+
 .media-card {
   overflow: hidden;
 }

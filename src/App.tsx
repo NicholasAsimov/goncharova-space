@@ -2,6 +2,7 @@ import { A, Route, Router, useLocation, useParams } from "@solidjs/router";
 import { For, Show, createEffect } from "solid-js";
 import type { JSX, ParentProps } from "solid-js";
 import AdminPage from "./admin/AdminPage";
+import type { CaseStudyBlock, RichTextSpan } from "./data/schema";
 import {
   asset,
   getRealmBySlug,
@@ -221,6 +222,60 @@ function RealmPage() {
   );
 }
 
+function renderRichText(spans: RichTextSpan[]): JSX.Element[] {
+  return spans.map((span) => {
+    if (span.break) return <br />;
+
+    let node: JSX.Element = span.href ? (
+      <a href={span.href} target="_blank" rel="noreferrer">
+        {span.text}
+      </a>
+    ) : (
+      <>{span.text}</>
+    );
+
+    if (span.code) node = <code>{node}</code>;
+    if (span.underline) node = <u>{node}</u>;
+    if (span.italic) node = <em>{node}</em>;
+    if (span.bold) node = <strong>{node}</strong>;
+    return node;
+  });
+}
+
+function renderCaseStudyBlock(block: CaseStudyBlock): JSX.Element {
+  switch (block.type) {
+    case "heading":
+      if (block.level === 1) {
+        return <h2 class="case-study-heading case-study-heading-h1">{renderRichText(block.content)}</h2>;
+      }
+      if (block.level === 2) {
+        return <h3 class="case-study-heading case-study-heading-h2">{renderRichText(block.content)}</h3>;
+      }
+      return <h4 class="case-study-heading case-study-heading-h3">{renderRichText(block.content)}</h4>;
+    case "paragraph":
+      return <p class="case-study-paragraph">{renderRichText(block.content)}</p>;
+    case "list":
+      return (
+        <ul class="case-study-list">
+          <For each={block.items}>
+            {(item) => <li>{renderRichText(item)}</li>}
+          </For>
+        </ul>
+      );
+    case "image":
+      return (
+        <figure class="case-study-figure">
+          <img src={asset(block.media.src)} alt={block.media.alt} />
+          <Show when={block.media.caption}>
+            <figcaption>{block.media.caption}</figcaption>
+          </Show>
+        </figure>
+      );
+    case "divider":
+      return <hr class="case-study-divider" />;
+  }
+}
+
 function WorkPage() {
   const params = useParams();
   const workSlug = () => params.workSlug ?? "";
@@ -273,18 +328,29 @@ function WorkPage() {
               </figure>
             </section>
 
-            <section class="media-mosaic">
-              <For each={resolvedWork().media.slice(1)}>
-                {(media) => (
-                  <figure class="media-card">
-                    <img src={asset(media.src)} alt={media.alt} />
-                    <Show when={media.caption}>
-                      <figcaption>{media.caption}</figcaption>
-                    </Show>
-                  </figure>
-                )}
-              </For>
-            </section>
+            <Show
+              when={resolvedWork().blocks && resolvedWork().blocks!.length > 0}
+              fallback={
+                <section class="media-mosaic">
+                  <For each={resolvedWork().media.slice(1)}>
+                    {(media) => (
+                      <figure class="media-card">
+                        <img src={asset(media.src)} alt={media.alt} />
+                        <Show when={media.caption}>
+                          <figcaption>{media.caption}</figcaption>
+                        </Show>
+                      </figure>
+                    )}
+                  </For>
+                </section>
+              }
+            >
+              <section class="case-study-flow">
+                <For each={resolvedWork().blocks}>
+                  {(block) => renderCaseStudyBlock(block)}
+                </For>
+              </section>
+            </Show>
 
             <Show when={related().length > 0}>
               <section class="related-section">
