@@ -1,5 +1,5 @@
 import { A, Route, Router, useLocation, useParams } from "@solidjs/router";
-import { For, Show, createEffect, createSignal, onCleanup } from "solid-js";
+import { For, Show, createEffect, createResource, createSignal, onCleanup } from "solid-js";
 import type { JSX, ParentProps } from "solid-js";
 import AdminPage from "./admin/AdminPage";
 import type { CaseStudyBlock, MediaItem, RichTextSpan } from "./data/schema";
@@ -10,6 +10,8 @@ import {
   getWorkBySlug,
   getWorksForRealm,
   getRelatedWorks,
+  isLazyAssetPath,
+  resolveLazyAssetPath,
   siteManifest,
 } from "./data/site";
 
@@ -70,8 +72,9 @@ function RootShell(props: ParentProps) {
   );
 }
 
-function renderMediaAsset(
+function renderResolvedMediaAsset(
   media: MediaItem,
+  src: string,
   options?: {
     class?: string;
     autoplay?: boolean;
@@ -81,7 +84,7 @@ function renderMediaAsset(
     return (
       <video
         class={options?.class}
-        src={asset(media.src)}
+        src={src}
         aria-label={media.alt}
         muted
         playsinline
@@ -95,10 +98,40 @@ function renderMediaAsset(
   return (
     <img
       class={options?.class}
-      src={asset(media.src)}
+      src={src}
       alt={media.alt}
     />
   );
+}
+
+function LazyMediaAsset(props: {
+  media: MediaItem;
+  options?: {
+    class?: string;
+    autoplay?: boolean;
+  };
+}): JSX.Element {
+  const [src] = createResource(() => props.media.src, resolveLazyAssetPath);
+
+  return (
+    <Show when={src()}>
+      {(resolvedSrc) => renderResolvedMediaAsset(props.media, resolvedSrc(), props.options)}
+    </Show>
+  );
+}
+
+function renderMediaAsset(
+  media: MediaItem,
+  options?: {
+    class?: string;
+    autoplay?: boolean;
+  },
+): JSX.Element {
+  if (isLazyAssetPath(media.src)) {
+    return <LazyMediaAsset media={media} options={options} />;
+  }
+
+  return renderResolvedMediaAsset(media, asset(media.src), options);
 }
 
 function HomePage() {

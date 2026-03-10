@@ -27,8 +27,8 @@ interface CuratedManifest {
 
 const curatedAssetModules = import.meta.glob(
   "../../archive/curated/**/*.{jpg,jpeg,png,webp,gif,mp4,mov,webm}",
-  { eager: true, import: "default" },
-) as Record<string, string>;
+  { import: "default" },
+) as Record<string, () => Promise<string>>;
 
 const curatedManifestModules = import.meta.glob("../../archive/manifests/*.json", {
   eager: true,
@@ -39,16 +39,7 @@ function assetModulePath(archivePath: string): string {
   return `../../${archivePath}`;
 }
 
-function getCuratedAssetPath(archivePath: string): string {
-  const modulePath = assetModulePath(archivePath);
-  const assetPath = curatedAssetModules[modulePath];
-
-  if (!assetPath) {
-    throw new Error(`missing curated asset import for ${archivePath}`);
-  }
-
-  return assetPath;
-}
+const curatedAssetCache = new Map<string, Promise<string>>();
 
 function extensionToMediaKind(fileName: string): MediaKind {
   return /\.(mp4|mov|webm)$/i.test(fileName) ? "video" : "image";
@@ -111,7 +102,7 @@ function deriveCuratedTags(item: CuratedManifestItem): string[] {
 
 function createCuratedMedia(item: CuratedManifestItem): MediaItem {
   return {
-    src: getCuratedAssetPath(item.curatedPath),
+    src: item.curatedPath,
     alt: item.note.trim() || deriveCuratedTitle(item),
     kind: extensionToMediaKind(item.fileName),
   };
@@ -217,17 +208,30 @@ export const siteManifest: { realms: Realm[]; works: Work[] } = {
   works,
 };
 
-function normalizeRealmSlug(slug: string): RealmSlug | undefined {
-  if (slug === "rooms") return "mirror";
-  if (slug === "studio" || slug === "orchard" || slug === "mirror" || slug === "practice" || slug === "play") {
-    return slug;
-  }
-
-  return undefined;
-}
-
 export function asset(path: string): string {
   return encodeURI(path);
+}
+
+export function isLazyAssetPath(path: string): boolean {
+  return path.startsWith("archive/curated/");
+}
+
+export function resolveLazyAssetPath(path: string): Promise<string> {
+  if (!isLazyAssetPath(path)) {
+    return Promise.resolve(asset(path));
+  }
+
+  const existing = curatedAssetCache.get(path);
+  if (existing) return existing;
+
+  const importer = curatedAssetModules[assetModulePath(path)];
+  if (!importer) {
+    throw new Error(`missing curated asset import for ${path}`);
+  }
+
+  const next = importer().then((resolvedPath) => encodeURI(resolvedPath));
+  curatedAssetCache.set(path, next);
+  return next;
 }
 
 export function getRealms(): Realm[] {
@@ -235,10 +239,7 @@ export function getRealms(): Realm[] {
 }
 
 export function getRealmBySlug(slug: string): Realm | undefined {
-  const normalizedSlug = normalizeRealmSlug(slug);
-  if (!normalizedSlug) return undefined;
-
-  return siteManifest.realms.find((realm) => realm.slug === normalizedSlug);
+  return siteManifest.realms.find((realm) => realm.slug === slug);
 }
 
 export function getWorks(): Work[] {
@@ -250,13 +251,10 @@ export function getWorkBySlug(slug: string): Work | undefined {
 }
 
 export function getWorksForRealm(slug: string): Work[] {
-  const normalizedSlug = normalizeRealmSlug(slug);
-  if (!normalizedSlug) return [];
-
   return siteManifest.works.filter(
     (work) =>
-      work.realmSlug === normalizedSlug ||
-      work.relatedRealmSlugs?.includes(normalizedSlug),
+      work.realmSlug === slug ||
+      work.relatedRealmSlugs?.includes(slug as RealmSlug),
   );
 }
 
