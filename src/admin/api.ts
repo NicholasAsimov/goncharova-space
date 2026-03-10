@@ -1,11 +1,8 @@
 import type {
   AdminState,
-  ApplyPreview,
-  ReviewColor,
-  ReviewMood,
-  ReviewMotif,
-  ReviewRealm,
-  ReviewStatus,
+  ApproveItemPayload,
+  HideItemsPayload,
+  UnhideItemPayload,
 } from "./types";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
@@ -29,36 +26,23 @@ export function fetchAdminState(): Promise<AdminState> {
   return request("/api/admin/state");
 }
 
-export function importRawMedia(): Promise<AdminState & { imported: number }> {
-  return request("/api/admin/import", { method: "POST" });
-}
-
-export function updateQueueItem(
-  id: string,
-  payload: {
-    status?: ReviewStatus;
-    selectedRealm?: ReviewRealm | "";
-    note?: string;
-    moods?: ReviewMood[];
-    colors?: ReviewColor[];
-    motifs?: ReviewMotif[];
-    sourceUrl?: string;
-  },
-): Promise<AdminState> {
-  return request(`/api/admin/pending/${id}`, {
-    method: "PATCH",
+export function approveItem(payload: ApproveItemPayload): Promise<AdminState> {
+  return request("/api/admin/approve", {
+    method: "POST",
     body: JSON.stringify(payload),
   });
 }
 
-export function fetchApplyPreview(): Promise<ApplyPreview> {
-  return request("/api/admin/apply-preview", {
+export function hideItems(payload: HideItemsPayload): Promise<AdminState> {
+  return request("/api/admin/hide", {
     method: "POST",
+    body: JSON.stringify(payload),
   });
 }
 
-export function applyApproved(): Promise<{ result: { applied: number } } & AdminState> {
-  return request("/api/admin/apply", {
+export function unhideItem(payload: UnhideItemPayload): Promise<AdminState> {
+  return request("/api/admin/unhide", {
     method: "POST",
+    body: JSON.stringify(payload),
   });
 }

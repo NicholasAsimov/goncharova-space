@@ -1,4 +1,238 @@
 {
   "realm": "studio",
-  "items": []
+  "items": [
+    {
+      "id": "f914ec9de63e",
+      "account": "kategonc",
+      "realm": "studio",
+      "sourcePath": "archive/raw/kategonc/2019-12-05__akO9hRkd_highlight/2025-12-16_DSU1rz5DMRt_highlight_55.mp4",
+      "sourceUrl": "https://www.instagram.com/stories/highlights/17849762707740957/",
+      "note": "",
+      "moods": [
+        "cinematic"
+      ],
+      "colors": [],
+      "motifs": [
+        "window",
+        "table",
+        "room"
+      ],
+      "fileName": "2025-12-16_DSU1rz5DMRt_highlight_55.mp4",
+      "curatedPath": "archive/curated/studio/2025-12-16_DSU1rz5DMRt_highlight_55.mp4",
+      "createdAt": "2026-03-09T07:42:42.090Z"
+    },
+    {
+      "id": "0ea2d953642a",
+      "account": "visuartist",
+      "realm": "studio",
+      "sourcePath": "archive/raw/visuartist/2025-02-07_DFxEO7Ks2Jl_reel/2025-02-07_DFxEO7Ks2Jl_reel_01.mp4",
+      "sourceUrl": "https://www.instagram.com/reel/DFxEO7Ks2Jl/",
+      "note": "",
+      "moods": [
+        "cinematic"
+      ],
+      "colors": [
+        "charcoal"
+      ],
+      "motifs": [
+        "table",
+        "paper"
+      ],
+      "fileName": "2025-02-07_DFxEO7Ks2Jl_reel_01.mp4",
+      "curatedPath": "archive/curated/studio/2025-02-07_DFxEO7Ks2Jl_reel_01.mp4",
+      "createdAt": "2026-03-09T07:44:15.345Z"
+    },
+    {
+      "id": "a6c5d04d1231",
+      "account": "visuartist",
+      "realm": "studio",
+      "sourcePath": "archive/raw/visuartist/2025-12-26_DSuWnxZDO-__post/2025-12-26_DSuWnxZDO-__post_01.jpg",
+      "sourceUrl": "https://www.instagram.com/p/DSuWnxZDO-_/",
+      "note": "",
+      "moods": [
+        "dreamy"
+      ],
+      "colors": [
+        "ink"
+      ],
+      "motifs": [
+        "water"
+      ],
+      "fileName": "2025-12-26_DSuWnxZDO-__post_01.jpg",
+      "curatedPath": "archive/curated/studio/2025-12-26_DSuWnxZDO-__post_01.jpg",
+      "createdAt": "2026-03-09T07:45:35.950Z"
+    },
+    {
+      "id": "be2da51bd7f9",
+      "account": "visuartist",
+      "realm": "studio",
+      "sourcePath": "archive/raw/visuartist/2021-01-23_CKYnQSlhQwr_post/2021-01-23_CKYnQSlhQwr_post_01.jpg",
+      "sourceUrl": "https://www.instagram.com/p/CKYnQSlhQwr/",
+      "note": "",
+      "moods": [
+        "bold"
+      ],
+      "colors": [
+        "terracotta"
+      ],
+      "motifs": [
+        "hands",
+        "fabric"
+      ],
+      "fileName": "2021-01-23_CKYnQSlhQwr_post_01.jpg",
+      "curatedPath": "archive/curated/studio/2021-01-23_CKYnQSlhQwr_post_01.jpg",
+      "createdAt": "2026-03-09T07:46:11.376Z"
+    },
+    {
+      "id": "aae4184b3eb8",
+      "account": "visuartist",
+      "realm": "studio",
+      "sourcePath": "archive/raw/visuartist/2020-07-28_CDMafFiBrt3_post/2020-07-28_CDMafFiBrt3_post_01.jpg",
+      "sourceUrl": "https://www.instagram.com/p/CDMafFiBrt3/",
+      "note": "",
+      "moods": [
+        "tender",
+        "intimate"
+      ],
+      "colors": [
+        "terracotta",
+        "cream"
+      ],
+      "motifs": [
+        "fabric"
+      ],
+      "fileName": "2020-07-28_CDMafFiBrt3_post_01.jpg",
+      "curatedPath": "archive/curated/studio/2020-07-28_CDMafFiBrt3_post_01.jpg",
+      "createdAt": "2026-03-09T07:46:56.746Z"
+    },
+    {
+      "id": "c6252b8f1bcf",
+      "account": "visuartist",
+      "realm": "studio",
+      "sourcePath": "archive/raw/visuartist/2020-05-10_CAAAcdagWIh_post/2020-05-10_CAAAcdagWIh_post_01.jpg",
+      "sourceUrl": "https://www.instagram.com/p/CAAAcdagWIh/",
+      "note": "",
+      "moods": [
+        "dreamy",
+        "playful"
+      ],
+      "colors": [],
+      "motifs": [
+        "flowers",
+        "fabric"
+      ],
+      "fileName": "2020-05-10_CAAAcdagWIh_post_01.jpg",
+      "curatedPath": "archive/curated/studio/2020-05-10_CAAAcdagWIh_post_01.jpg",
+      "createdAt": "2026-03-09T07:47:38.873Z"
+    },
+    {
+      "id": "227e62e4c213",
+      "account": "visuartist",
+      "realm": "studio",
+      "sourcePath": "archive/raw/visuartist/2020-05-13_CAIGATTASbu_post/2020-05-13_CAIGATTASbu_post_01.jpg",
+      "sourceUrl": "https://www.instagram.com/p/CAIGATTASbu/",
+      "note": "",
+      "moods": [
+        "tender"
+      ],
+      "colors": [
+        "cream",
+        "terracotta",
+        "charcoal"
+      ],
+      "motifs": [
+        "flowers",
+        "hands",
+        "fabric"
+      ],
+      "fileName": "2020-05-13_CAIGATTASbu_post_01.jpg",
+      "curatedPath": "archive/curated/studio/2020-05-13_CAIGATTASbu_post_01.jpg",
+      "createdAt": "2026-03-09T07:48:58.395Z"
+    },
+    {
+      "id": "fa1037ebab61",
+      "account": "visuartist",
+      "realm": "studio",
+      "sourcePath": "archive/raw/visuartist/2020-08-07_CDl9DBeBxKK_post/2020-08-07_CDl9DBeBxKK_post_01.jpg",
+      "sourceUrl": "https://www.instagram.com/p/CDl9DBeBxKK/",
+      "note": "",
+      "moods": [
+        "tender"
+      ],
+      "colors": [
+        "cream",
+        "amber"
+      ],
+      "motifs": [
+        "hands"
+      ],
+      "fileName": "2020-08-07_CDl9DBeBxKK_post_01.jpg",
+      "curatedPath": "archive/curated/studio/2020-08-07_CDl9DBeBxKK_post_01.jpg",
+      "createdAt": "2026-03-09T07:50:01.475Z"
+    },
+    {
+      "id": "724bbebb8841",
+      "account": "visuartist",
+      "realm": "studio",
+      "sourcePath": "archive/raw/visuartist/2020-07-23_CC-we1uBlSD_post/2020-07-23_CC-we1uBlSD_post_01.jpg",
+      "sourceUrl": "https://www.instagram.com/p/CC-we1uBlSD/",
+      "note": "",
+      "moods": [
+        "still",
+        "bold"
+      ],
+      "colors": [
+        "terracotta"
+      ],
+      "motifs": [
+        "fabric"
+      ],
+      "fileName": "2020-07-23_CC-we1uBlSD_post_01.jpg",
+      "curatedPath": "archive/curated/studio/2020-07-23_CC-we1uBlSD_post_01.jpg",
+      "createdAt": "2026-03-09T07:51:16.582Z"
+    },
+    {
+      "id": "67fe499da4b2",
+      "account": "kategonc",
+      "realm": "studio",
+      "sourcePath": "archive/raw/kategonc/2019-12-05__akO9hRkd_highlight/2024-04-22_C6EYVwxr8gQ_highlight_54.jpg",
+      "sourceUrl": "https://www.instagram.com/stories/highlights/17849762707740957/",
+      "note": "",
+      "moods": [
+        "playful",
+        "bold"
+      ],
+      "colors": [
+        "citrus"
+      ],
+      "motifs": [
+        "citrus",
+        "flowers"
+      ],
+      "fileName": "2024-04-22_C6EYVwxr8gQ_highlight_54.jpg",
+      "curatedPath": "archive/curated/studio/2024-04-22_C6EYVwxr8gQ_highlight_54.jpg",
+      "createdAt": "2026-03-09T07:52:46.228Z"
+    },
+    {
+      "id": "103da4793107",
+      "account": "kategonc",
+      "realm": "studio",
+      "sourcePath": "archive/raw/kategonc/2019-12-05__akO9hRkd_highlight/2023-08-13_Cv4NpPbNE-L_highlight_44.jpg",
+      "sourceUrl": "https://www.instagram.com/stories/highlights/17849762707740957/",
+      "note": "",
+      "moods": [
+        "still"
+      ],
+      "colors": [
+        "cream",
+        "olive"
+      ],
+      "motifs": [
+        "paper"
+      ],
+      "fileName": "2023-08-13_Cv4NpPbNE-L_highlight_44.jpg",
+      "curatedPath": "archive/curated/studio/2023-08-13_Cv4NpPbNE-L_highlight_44.jpg",
+      "createdAt": "2026-03-09T07:55:34.434Z"
+    }
+  ]
 }

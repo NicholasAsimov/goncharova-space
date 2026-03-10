@@ -11,31 +11,33 @@ import {
   reviewMoods,
   reviewMotifs,
   reviewRealms,
-  reviewStatuses,
   type AdminState,
-  type ApplyPreview,
+  type ApproveItemPayload,
   type CuratedItem,
-  type PendingQueue,
-  type PendingQueueItem,
-  type QueueItem,
-  type ReviewColor,
+  type HiddenList,
+  type HideItemsPayload,
   type RealmManifest,
   type ReviewAccount,
+  type ReviewColor,
+  type ReviewItem,
   type ReviewMediaType,
   type ReviewMood,
   type ReviewMotif,
   type ReviewRealm,
-  type UpdateQueuePayload,
+  type ReviewStatus,
+  type UnhideItemPayload,
 } from "../src/shared/admin.ts";
 
 interface MetadataShape {
   post_url?: string;
   post_shortcode?: string;
+  shortcode?: string;
   url?: string;
   date?: string;
   post_date?: string;
   description?: string;
   caption?: string;
+  type?: string;
 }
 
 const ROOT = process.cwd();
@@ -44,7 +46,7 @@ const RAW_ROOT = join(ARCHIVE_ROOT, "raw");
 const CURATED_ROOT = join(ARCHIVE_ROOT, "curated");
 const REVIEW_ROOT = join(ARCHIVE_ROOT, "review");
 const MANIFESTS_ROOT = join(ARCHIVE_ROOT, "manifests");
-const PENDING_PATH = join(REVIEW_ROOT, "pending.json");
+const HIDDEN_PATH = join(REVIEW_ROOT, "hidden.json");
 const IMAGE_EXTENSIONS = new Set([".jpg", ".jpeg", ".png", ".webp", ".gif"]);
 const VIDEO_EXTENSIONS = new Set([".mp4", ".mov", ".webm"]);
 const moodSet = new Set<string>(reviewMoods);
@@ -99,65 +101,41 @@ async function handleApi(req: IncomingMessage, res: ServerResponse, requestUrl: 
     return json(res, 200, await buildAdminState());
   }
 
-  if (method === "POST" && path === "/api/admin/import") {
-    const imported = await importRawMedia();
-    return json(res, 200, { imported, ...(await buildAdminState()) });
-  }
-
-  if (method === "PATCH" && path.startsWith("/api/admin/pending/")) {
-    const id = decodeURIComponent(path.replace("/api/admin/pending/", ""));
-    const payload = await readJsonBody<UpdateQueuePayload>(req);
-    await updatePendingItem(id, payload);
+  if (method === "POST" && path === "/api/admin/approve") {
+    const payload = await readJsonBody<ApproveItemPayload>(req);
+    await approveItem(payload);
     return json(res, 200, await buildAdminState());
   }
 
-  if (method === "POST" && path === "/api/admin/apply-preview") {
-    return json(res, 200, await createApplyPreview());
+  if (method === "POST" && path === "/api/admin/hide") {
+    const payload = await readJsonBody<HideItemsPayload>(req);
+    await hideItems(payload.sourcePaths ?? []);
+    return json(res, 200, await buildAdminState());
   }
 
-  if (method === "POST" && path === "/api/admin/apply") {
-    const result = await applyApprovedItems();
-    return json(res, 200, { result, ...(await buildAdminState()) });
-  }
-
-  if (method === "GET" && path.startsWith("/api/admin/manifests/")) {
-    const realm = decodeURIComponent(path.replace("/api/admin/manifests/", ""));
-    if (!reviewRealms.includes(realm as ReviewRealm)) {
-      return json(res, 404, { error: `unknown realm ${realm}` });
-    }
-    return json(res, 200, await readRealmManifest(realm as ReviewRealm));
+  if (method === "POST" && path === "/api/admin/unhide") {
+    const payload = await readJsonBody<UnhideItemPayload>(req);
+    await unhideItem(payload.sourcePath);
+    return json(res, 200, await buildAdminState());
   }
 
   return json(res, 404, { error: "not found" });
 }
 
 async function buildAdminState(): Promise<AdminState> {
-  const pending = await readPendingQueue();
   const manifests = await Promise.all(reviewRealms.map((realm) => readRealmManifest(realm)));
-  const sortedQueue = [...pending.items].sort(compareBySourceDateDesc);
-  const summary = {
-    total: pending.items.length,
-    pending: pending.items.filter((item) => item.status === "pending").length,
-    approved: pending.items.filter((item) => item.status === "approved").length,
-    rejected: pending.items.filter((item) => item.status === "rejected").length,
-    skipped: pending.items.filter((item) => item.status === "skipped").length,
-    curated: manifests.reduce((sum, manifest) => sum + manifest.items.length, 0),
-  };
+  const hidden = await readHiddenList();
+  const hiddenSet = new Set(hidden.items);
+  const approvedBySource = new Map<string, CuratedItem>();
 
-  return {
-    queue: sortedQueue.map(withPreviewUrls),
-    manifests,
-    summary,
-  };
-}
+  for (const manifest of manifests) {
+    for (const item of manifest.items) {
+      approvedBySource.set(item.sourcePath, item);
+    }
+  }
 
-async function importRawMedia(): Promise<number> {
-  const manifests = await Promise.all(reviewRealms.map((realm) => readRealmManifest(realm)));
-  const knownSourcePaths = new Set<string>([
-    ...manifests.flatMap((manifest) => manifest.items.map((item) => item.sourcePath)),
-  ]);
+  const items: ReviewItem[] = [];
 
-  const discovered: PendingQueueItem[] = [];
   for (const account of reviewAccounts) {
     const accountDir = join(RAW_ROOT, account);
     try {
@@ -165,223 +143,149 @@ async function importRawMedia(): Promise<number> {
     } catch {
       continue;
     }
+
     const files = await walk(accountDir);
     for (const filePath of files) {
       if (!isSupportedMedia(filePath)) continue;
+
       const sourcePath = relative(ROOT, filePath);
-      if (knownSourcePaths.has(sourcePath)) continue;
       const metadata = await readMetadataForMedia(filePath);
       if (!metadata) {
         console.warn(`warning: missing metadata for ${sourcePath}`);
         continue;
       }
-      discovered.push(await createPendingItem(account, filePath, metadata));
+
+      items.push(createReviewItem(account, filePath, metadata, approvedBySource.get(sourcePath), hiddenSet.has(sourcePath)));
     }
   }
 
-  discovered.sort(compareBySourceDateDesc);
-  await writePendingQueue({ items: discovered });
-
-  return discovered.length;
-}
-
-async function updatePendingItem(id: string, payload: UpdateQueuePayload): Promise<void> {
-  const pending = await readPendingQueue();
-  const item = pending.items.find((entry) => entry.id === id);
-  if (!item) {
-    throw new Error(`pending item ${id} not found`);
-  }
-
-  if (payload.note !== undefined) item.note = String(payload.note);
-  if (payload.sourceUrl !== undefined) item.sourceUrl = String(payload.sourceUrl);
-  if (payload.moods !== undefined) item.moods = sanitizeTags(payload.moods, moodSet) as ReviewMood[];
-  if (payload.colors !== undefined) item.colors = sanitizeTags(payload.colors, colorSet) as ReviewColor[];
-  if (payload.motifs !== undefined) item.motifs = sanitizeTags(payload.motifs, motifSet) as ReviewMotif[];
-  if (payload.selectedRealm !== undefined) {
-    if (payload.selectedRealm !== "" && !reviewRealms.includes(payload.selectedRealm as ReviewRealm)) {
-      throw new Error(`unsupported realm ${payload.selectedRealm}`);
-    }
-    item.selectedRealm = (payload.selectedRealm || null) as ReviewRealm | null;
-  }
-  if (payload.status !== undefined) {
-    if (!reviewStatuses.includes(payload.status)) {
-      throw new Error(`unsupported status ${payload.status}`);
-    }
-    item.status = payload.status;
-  }
-  item.updatedAt = new Date().toISOString();
-
-  await writePendingQueue(pending);
-}
-
-async function createApplyPreview(): Promise<ApplyPreview> {
-  const pending = await readPendingQueue();
-  const approved = pending.items.filter(
-    (item): item is PendingQueueItem & { selectedRealm: ReviewRealm } =>
-      item.status === "approved" && item.selectedRealm !== null,
-  );
-
-  const operations: ApplyPreview["operations"] = [];
-  const destinationCache = new Map<string, string>();
-
-  for (const item of approved) {
-    const destination = await getUniqueDestination(
-      join(CURATED_ROOT, item.selectedRealm),
-      basename(item.sourcePath),
-      destinationCache,
-    );
-    operations.push({
-      id: item.id,
-      realm: item.selectedRealm,
-      sourcePath: item.sourcePath,
-      destinationPath: relative(ROOT, destination),
-    });
-  }
+  items.sort(compareReviewItems);
 
   return {
-    approvedCount: approved.length,
-    operations,
+    items,
+    manifests,
+    hidden: hidden.items,
+    summary: {
+      total: items.length,
+      available: items.filter((item) => item.status === "available").length,
+      approved: items.filter((item) => item.status === "approved").length,
+      hidden: items.filter((item) => item.status === "hidden").length,
+    },
   };
 }
 
-async function applyApprovedItems(): Promise<{ applied: number }> {
-  const pending = await readPendingQueue();
+async function approveItem(payload: ApproveItemPayload): Promise<void> {
+  if (!reviewRealms.includes(payload.selectedRealm)) {
+    throw new Error(`unsupported realm ${payload.selectedRealm}`);
+  }
+
+  const sourcePath = payload.sourcePath;
+  const absoluteSource = join(ROOT, sourcePath);
+  await stat(absoluteSource);
+
   const manifests = new Map<ReviewRealm, RealmManifest>();
   for (const realm of reviewRealms) {
     manifests.set(realm, await readRealmManifest(realm));
   }
 
-  const destinationCache = new Map<string, string>();
-  const remaining: PendingQueueItem[] = [];
-  let applied = 0;
-
-  for (const item of pending.items) {
-    if (item.status !== "approved" || !item.selectedRealm) {
-      remaining.push(item);
-      continue;
-    }
-
-    const destination = await getUniqueDestination(
-      join(CURATED_ROOT, item.selectedRealm),
-      basename(item.sourcePath),
-      destinationCache,
-    );
-
-    await mkdir(dirname(destination), { recursive: true });
-    await copyFile(join(ROOT, item.sourcePath), destination);
-
-    const manifest = manifests.get(item.selectedRealm);
-    if (!manifest) {
-      throw new Error(`realm manifest ${item.selectedRealm} not loaded`);
-    }
-
-    const curatedItem: CuratedItem = {
-      id: item.id,
-      account: item.account,
-      realm: item.selectedRealm,
-      sourcePath: item.sourcePath,
-      sourceUrl: item.sourceUrl,
-      note: item.note,
-      moods: item.moods,
-      colors: item.colors,
-      motifs: item.motifs,
-      fileName: basename(destination),
-      curatedPath: relative(ROOT, destination),
-      createdAt: new Date().toISOString(),
-    };
-
-    manifest.items.push(curatedItem);
-    applied += 1;
+  for (const manifest of manifests.values()) {
+    manifest.items = manifest.items.filter((item) => item.sourcePath !== sourcePath);
   }
+
+  const destination = await getUniqueDestination(join(CURATED_ROOT, payload.selectedRealm), basename(sourcePath));
+  await mkdir(dirname(destination), { recursive: true });
+  await copyFile(absoluteSource, destination);
+
+  const manifest = manifests.get(payload.selectedRealm);
+  if (!manifest) {
+    throw new Error(`realm manifest ${payload.selectedRealm} not loaded`);
+  }
+
+  manifest.items.push({
+    id: createHash("sha1").update(sourcePath).digest("hex").slice(0, 12),
+    account: inferAccountFromSourcePath(sourcePath),
+    realm: payload.selectedRealm,
+    sourcePath,
+    sourceUrl: payload.sourceUrl,
+    note: payload.note,
+    moods: sanitizeTags(payload.moods, moodSet) as ReviewMood[],
+    colors: sanitizeTags(payload.colors, colorSet) as ReviewColor[],
+    motifs: sanitizeTags(payload.motifs, motifSet) as ReviewMotif[],
+    fileName: basename(destination),
+    curatedPath: relative(ROOT, destination),
+    createdAt: new Date().toISOString(),
+  });
 
   for (const realm of reviewRealms) {
-    const manifest = manifests.get(realm);
-    if (manifest) {
-      await writeRealmManifest(realm, manifest);
-    }
+    const nextManifest = manifests.get(realm);
+    if (nextManifest) await writeRealmManifest(realm, nextManifest);
   }
 
-  pending.items = remaining;
-  await writePendingQueue(pending);
-
-  return { applied };
+  const hidden = await readHiddenList();
+  hidden.items = hidden.items.filter((item) => item !== sourcePath);
+  await writeHiddenList(hidden);
 }
 
-async function createPendingItem(
+async function hideItems(sourcePaths: string[]): Promise<void> {
+  const hidden = await readHiddenList();
+  const next = new Set(hidden.items);
+  const manifests = await Promise.all(reviewRealms.map((realm) => readRealmManifest(realm)));
+  const approvedSet = new Set(manifests.flatMap((manifest) => manifest.items.map((item) => item.sourcePath)));
+
+  for (const sourcePath of sourcePaths) {
+    if (typeof sourcePath !== "string" || sourcePath === "") continue;
+    if (approvedSet.has(sourcePath)) continue;
+    next.add(sourcePath);
+  }
+
+  await writeHiddenList({ items: [...next].sort() });
+}
+
+async function unhideItem(sourcePath: string): Promise<void> {
+  const hidden = await readHiddenList();
+  hidden.items = hidden.items.filter((item) => item !== sourcePath);
+  await writeHiddenList(hidden);
+}
+
+function createReviewItem(
   account: ReviewAccount,
   absolutePath: string,
   metadata: MetadataShape,
-): Promise<PendingQueueItem> {
+  curatedItem?: CuratedItem,
+  isHidden = false,
+): ReviewItem {
   const sourcePath = relative(ROOT, absolutePath);
   const mediaType: ReviewMediaType = VIDEO_EXTENSIONS.has(extname(absolutePath).toLowerCase())
     ? "video"
     : "image";
-  const sourceDate = normalizeMetadataDate(metadata.post_date || metadata.date);
+  const sourceDate = selectMetadataDate(metadata);
 
   if (!sourceDate) {
     throw new Error(`missing metadata date for ${sourcePath}`);
   }
 
+  let status: ReviewStatus = "available";
+  if (curatedItem) status = "approved";
+  else if (isHidden) status = "hidden";
+
   return {
     id: createHash("sha1").update(sourcePath).digest("hex").slice(0, 12),
     account,
     sourcePath,
-    sourceUrl: metadata.post_url || metadata.url || "",
+    sourceUrl: curatedItem?.sourceUrl || metadata.post_url || metadata.url || "",
     sourceDate,
     caption: metadata.description || metadata.caption || "",
-    note: "",
-    moods: [],
-    colors: [],
-    motifs: [],
-    selectedRealm: null,
-    status: "pending",
+    note: curatedItem?.note || "",
+    moods: curatedItem?.moods || [],
+    colors: curatedItem?.colors || [],
+    motifs: curatedItem?.motifs || [],
+    realm: curatedItem?.realm || null,
+    status,
     mediaType,
-    postKey: metadata.post_shortcode || basename(absolutePath, extname(absolutePath)),
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    postKey: metadata.shortcode || metadata.post_shortcode || basename(absolutePath, extname(absolutePath)),
+    previewUrl: archiveUrl(sourcePath),
+    curatedPath: curatedItem?.curatedPath || null,
   };
-}
-
-function withPreviewUrls(item: PendingQueueItem): QueueItem {
-  return {
-    ...item,
-    previewUrl: archiveUrl(item.sourcePath),
-  };
-}
-
-function compareBySourceDateDesc(a: PendingQueueItem, b: PendingQueueItem): number {
-  const dateDiff = Date.parse(b.sourceDate) - Date.parse(a.sourceDate);
-  if (dateDiff !== 0) return dateDiff;
-
-  const aDir = dirname(a.sourcePath);
-  const bDir = dirname(b.sourcePath);
-  if (aDir === bDir) {
-    const itemDiff = extractFolderItemIndex(a.sourcePath) - extractFolderItemIndex(b.sourcePath);
-    if (itemDiff !== 0) return itemDiff;
-  }
-
-  return a.sourcePath.localeCompare(b.sourcePath);
-}
-
-function extractFolderItemIndex(sourcePath: string): number {
-  const name = basename(sourcePath, extname(sourcePath));
-  const match = name.match(/_(\d+)$/);
-  return match ? Number.parseInt(match[1], 10) : Number.MAX_SAFE_INTEGER;
-}
-
-async function readMetadataForMedia(filePath: string): Promise<MetadataShape | null> {
-  const metadataPath = `${filePath}.json`;
-  try {
-    const text = await readFile(metadataPath, "utf8");
-    return JSON.parse(text) as MetadataShape;
-  } catch {
-    return null;
-  }
-}
-
-function normalizeMetadataDate(value?: string): string {
-  if (!value) return "";
-  return value.includes("T") ? value : value.replace(" ", "T");
 }
 
 async function ensureArchiveState(): Promise<void> {
@@ -405,19 +309,19 @@ async function ensureArchiveState(): Promise<void> {
   }
 
   try {
-    await access(PENDING_PATH);
+    await access(HIDDEN_PATH);
   } catch {
-    await writePendingQueue({ items: [] });
+    await writeHiddenList({ items: [] });
   }
 }
 
-async function readPendingQueue(): Promise<PendingQueue> {
-  const text = await readFile(PENDING_PATH, "utf8");
-  return JSON.parse(text) as PendingQueue;
+async function readHiddenList(): Promise<HiddenList> {
+  const text = await readFile(HIDDEN_PATH, "utf8");
+  return JSON.parse(text) as HiddenList;
 }
 
-async function writePendingQueue(data: PendingQueue): Promise<void> {
-  await writeFile(PENDING_PATH, JSON.stringify(data, null, 2) + "\n");
+async function writeHiddenList(data: HiddenList): Promise<void> {
+  await writeFile(HIDDEN_PATH, JSON.stringify({ items: [...new Set(data.items)].sort() }, null, 2) + "\n");
 }
 
 async function readRealmManifest(realm: ReviewRealm): Promise<RealmManifest> {
@@ -450,15 +354,7 @@ function isSupportedMedia(filePath: string): boolean {
   return IMAGE_EXTENSIONS.has(extension) || VIDEO_EXTENSIONS.has(extension);
 }
 
-async function getUniqueDestination(
-  dir: string,
-  fileName: string,
-  cache: Map<string, string>,
-): Promise<string> {
-  const cacheKey = `${dir}:${fileName}`;
-  const cached = cache.get(cacheKey);
-  if (cached) return cached;
-
+async function getUniqueDestination(dir: string, fileName: string): Promise<string> {
   const extension = extname(fileName);
   const base = basename(fileName, extension);
   let candidate = join(dir, fileName);
@@ -470,7 +366,6 @@ async function getUniqueDestination(
       candidate = join(dir, `${base}-${index}${extension}`);
       index += 1;
     } catch {
-      cache.set(cacheKey, candidate);
       return candidate;
     }
   }
@@ -496,6 +391,10 @@ async function serveArchiveFile(res: ServerResponse, relativeArchivePath: string
 
 function archiveUrl(relativePath: string): string {
   return `/__archive/${relative(ARCHIVE_ROOT, join(ROOT, relativePath)).split("\\").join("/")}`;
+}
+
+function inferAccountFromSourcePath(sourcePath: string): ReviewAccount {
+  return sourcePath.includes("/visuartist/") ? "visuartist" : "kategonc";
 }
 
 function contentTypeFor(filePath: string): string {
@@ -529,4 +428,47 @@ function json<T>(res: ServerResponse, status: number, data: T): void {
 function sanitizeTags(values: unknown, allowed: Set<string>): string[] {
   if (!Array.isArray(values)) return [];
   return values.filter((value): value is string => typeof value === "string" && allowed.has(value));
+}
+
+function normalizeMetadataDate(value?: string): string {
+  if (!value) return "";
+  return value.includes("T") ? value : value.replace(" ", "T");
+}
+
+function selectMetadataDate(metadata: MetadataShape): string {
+  if (metadata.type === "highlight") {
+    return normalizeMetadataDate(metadata.date || metadata.post_date);
+  }
+
+  return normalizeMetadataDate(metadata.post_date || metadata.date);
+}
+
+async function readMetadataForMedia(filePath: string): Promise<MetadataShape | null> {
+  const metadataPath = `${filePath}.json`;
+  try {
+    const text = await readFile(metadataPath, "utf8");
+    return JSON.parse(text) as MetadataShape;
+  } catch {
+    return null;
+  }
+}
+
+function compareReviewItems(a: ReviewItem, b: ReviewItem): number {
+  const dateDiff = Date.parse(b.sourceDate) - Date.parse(a.sourceDate);
+  if (dateDiff !== 0) return dateDiff;
+
+  const aDir = dirname(a.sourcePath);
+  const bDir = dirname(b.sourcePath);
+  if (aDir === bDir) {
+    const itemDiff = extractFolderItemIndex(a.sourcePath) - extractFolderItemIndex(b.sourcePath);
+    if (itemDiff !== 0) return itemDiff;
+  }
+
+  return a.sourcePath.localeCompare(b.sourcePath);
+}
+
+function extractFolderItemIndex(sourcePath: string): number {
+  const name = basename(sourcePath, extname(sourcePath));
+  const match = name.match(/_(\d+)$/);
+  return match ? Number.parseInt(match[1], 10) : Number.MAX_SAFE_INTEGER;
 }

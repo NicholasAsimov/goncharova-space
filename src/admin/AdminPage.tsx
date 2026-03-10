@@ -1,22 +1,18 @@
 import { For, Match, Show, Switch, createEffect, createMemo, createSignal, onMount } from "solid-js";
+import { approveItem, fetchAdminState, hideItems, unhideItem } from "./api";
 import {
-  applyApproved,
-  fetchAdminState,
-  fetchApplyPreview,
-  importRawMedia,
-  updateQueueItem,
-} from "./api";
-import {
+  reviewAccounts,
   reviewColors,
   reviewMoods,
   reviewMotifs,
   type AdminState,
-  type ApplyPreview,
-  type QueueItem,
+  type ReviewAccount,
   type ReviewColor,
+  type ReviewItem,
   type ReviewMood,
   type ReviewMotif,
   type ReviewRealm,
+  type ReviewStatus,
 } from "./types";
 import mirrorMeta from "../data/realms/mirror/meta";
 import orchardMeta from "../data/realms/orchard/meta";
@@ -25,6 +21,8 @@ import practiceMeta from "../data/realms/practice/meta";
 import studioMeta from "../data/realms/studio/meta";
 
 const realms = [studioMeta, orchardMeta, mirrorMeta, practiceMeta, playMeta] as const;
+const allStatuses = ["available", "approved", "hidden"] as const;
+const PAGE_SIZE = 60;
 
 function formatDate(value: string) {
   return new Date(value).toLocaleString(undefined, {
@@ -33,42 +31,69 @@ function formatDate(value: string) {
   });
 }
 
-function nextReviewIndex(items: QueueItem[], currentId?: string) {
-  if (items.length === 0) return 0;
+function formatShortDate(value: string) {
+  return new Date(value).toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
+}
 
-  const pendingIndex = items.findIndex((item) => item.status === "pending");
-  if (pendingIndex !== -1) return pendingIndex;
-
-  const currentIndex = items.findIndex((item) => item.id === currentId);
-  return currentIndex === -1 ? 0 : currentIndex;
+function toggleValue<T>(current: readonly T[], value: T) {
+  return current.includes(value) ? current.filter((entry) => entry !== value) : [...current, value];
 }
 
 export default function AdminPage() {
+  let gridPane: HTMLDivElement | undefined;
+
   const [state, setState] = createSignal<AdminState | null>(null);
-  const [error, setError] = createSignal<string>("");
+  const [error, setError] = createSignal("");
   const [loading, setLoading] = createSignal(true);
-  const [currentId, setCurrentId] = createSignal<string>("");
+  const [busyAction, setBusyAction] = createSignal("");
+  const [viewMode, setViewMode] = createSignal<"grid" | "detail">("grid");
+  const [selectedSourcePath, setSelectedSourcePath] = createSignal("");
+  const [selectedPaths, setSelectedPaths] = createSignal<string[]>([]);
+  const [visibleStatuses, setVisibleStatuses] = createSignal<ReviewStatus[]>(["available"]);
+  const [accountFilter, setAccountFilter] = createSignal<ReviewAccount | "all">("all");
+  const [currentPage, setCurrentPage] = createSignal(1);
+  const [gridScrollTop, setGridScrollTop] = createSignal(0);
   const [noteDraft, setNoteDraft] = createSignal("");
   const [realmDraft, setRealmDraft] = createSignal<ReviewRealm | "">("");
   const [urlDraft, setUrlDraft] = createSignal("");
   const [moodsDraft, setMoodsDraft] = createSignal<ReviewMood[]>([]);
   const [colorsDraft, setColorsDraft] = createSignal<ReviewColor[]>([]);
   const [motifsDraft, setMotifsDraft] = createSignal<ReviewMotif[]>([]);
-  const [preview, setPreview] = createSignal<ApplyPreview | null>(null);
-  const [busyAction, setBusyAction] = createSignal("");
 
-  const queue = createMemo(() => state()?.queue ?? []);
-  const currentIndex = createMemo(() => nextReviewIndex(queue(), currentId()));
-  const currentItem = createMemo(() => queue()[currentIndex()]);
-  const stagedItems = createMemo(() => queue().filter((item) => item.status === "approved"));
+  const items = createMemo(() => state()?.items ?? []);
+  const selectedPathSet = createMemo(() => new Set(selectedPaths()));
+  const filteredItems = createMemo(() =>
+    items().filter((item) => {
+      if (!visibleStatuses().includes(item.status)) return false;
+      if (accountFilter() !== "all" && item.account !== accountFilter()) return false;
+      return true;
+    }),
+  );
+  const totalPages = createMemo(() => Math.max(1, Math.ceil(filteredItems().length / PAGE_SIZE)));
+  const pagedItems = createMemo(() => {
+    const page = Math.min(currentPage(), totalPages());
+    const start = (page - 1) * PAGE_SIZE;
+    return filteredItems().slice(start, start + PAGE_SIZE);
+  });
+  const selectedItem = createMemo(() =>
+    items().find((item) => item.sourcePath === selectedSourcePath()) ?? null,
+  );
 
   createEffect(() => {
-    const item = currentItem();
+    const maxPage = totalPages();
+    setCurrentPage((page) => (page > maxPage ? maxPage : page));
+  });
+
+  createEffect(() => {
+    const item = selectedItem();
     if (!item) return;
-    setCurrentId(item.id);
     setNoteDraft(item.note ?? "");
-    setRealmDraft(item.selectedRealm ?? "");
-    setUrlDraft(item.sourceUrl);
+    setRealmDraft(item.realm ?? "");
+    setUrlDraft(item.sourceUrl ?? "");
     setMoodsDraft(item.moods ?? []);
     setColorsDraft(item.colors ?? []);
     setMotifsDraft(item.motifs ?? []);
@@ -84,7 +109,15 @@ export default function AdminPage() {
       setError("");
       const resolved = nextState ?? (await fetchAdminState());
       setState(resolved);
-      setCurrentId((current) => resolved.queue.find((item) => item.id === current)?.id ?? resolved.queue[nextReviewIndex(resolved.queue)]?.id ?? "");
+      setSelectedPaths((current) =>
+        current.filter((sourcePath) =>
+          resolved.items.some((item) => item.sourcePath === sourcePath && item.status === "available"),
+        ),
+      );
+      setSelectedSourcePath((current) => {
+        if (current && resolved.items.some((item) => item.sourcePath === current)) return current;
+        return resolved.items[0]?.sourcePath ?? "";
+      });
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
@@ -105,60 +138,122 @@ export default function AdminPage() {
     }
   }
 
-  function applyNextState(nextState: AdminState) {
-    setPreview(null);
+  function applyNextState(nextState: AdminState, nextMode: "grid" | "detail" = viewMode()) {
     setState(nextState);
-    setCurrentId((current) => nextState.queue.find((item) => item.id === current)?.id ?? currentId());
+    setSelectedPaths((current) =>
+      current.filter((sourcePath) =>
+        nextState.items.some((item) => item.sourcePath === sourcePath && item.status === "available"),
+      ),
+    );
+    setSelectedSourcePath((current) => {
+      if (current && nextState.items.some((item) => item.sourcePath === current)) return current;
+      return nextState.items[0]?.sourcePath ?? "";
+    });
+    setViewMode(nextMode);
   }
 
-  async function updateCurrent(status: "pending" | "approved" | "rejected" | "skipped") {
-    const item = currentItem();
-    if (!item) return;
-    if (status === "approved" && !realmDraft()) {
+  function openDetail(item: ReviewItem) {
+    setGridScrollTop(gridPane?.scrollTop ?? 0);
+    setSelectedSourcePath(item.sourcePath);
+    setViewMode("detail");
+  }
+
+  function backToGrid() {
+    setViewMode("grid");
+    const nextScrollTop = gridScrollTop();
+    window.setTimeout(() => {
+      gridPane?.scrollTo({ top: nextScrollTop });
+    }, 0);
+  }
+
+  function toggleStatusVisibility(status: ReviewStatus) {
+    setVisibleStatuses((current) => {
+      const next = toggleValue(current, status);
+      return next.length === 0 ? [status] : next;
+    });
+    setCurrentPage(1);
+  }
+
+  function showAllStatuses() {
+    setVisibleStatuses([...allStatuses]);
+    setCurrentPage(1);
+  }
+
+  function showDefaultStatuses() {
+    setVisibleStatuses(["available"]);
+    setCurrentPage(1);
+  }
+
+  function toggleSelection(sourcePath: string) {
+    setSelectedPaths((current) => toggleValue(current, sourcePath));
+  }
+
+  async function handleBulkHide() {
+    const sourcePaths = [...selectedPaths()];
+    if (sourcePaths.length === 0) return;
+    const nextState = await runAction("hide-selected", () =>
+      hideItems({ sourcePaths }),
+    );
+    if (nextState) {
+      setSelectedPaths([]);
+      applyNextState(nextState, "grid");
+    }
+  }
+
+  async function handleApprove() {
+    const item = selectedItem();
+    const realm = realmDraft();
+    if (!item || !realm) {
       setError("Choose a realm before approving an item.");
       return;
     }
 
-    const payload = {
-      status,
-      note: noteDraft(),
-      sourceUrl: urlDraft(),
-      selectedRealm: realmDraft(),
-      moods: moodsDraft(),
-      colors: colorsDraft(),
-      motifs: motifsDraft(),
-    };
+    const note = noteDraft();
+    const moods = [...moodsDraft()];
+    const colors = [...colorsDraft()];
+    const motifs = [...motifsDraft()];
+    const sourceUrl = urlDraft();
 
-    const nextState = await runAction(status, () => updateQueueItem(item.id, payload));
+    const nextState = await runAction("approve", () =>
+      approveItem({
+        sourcePath: item.sourcePath,
+        selectedRealm: realm,
+        note,
+        moods,
+        colors,
+        motifs,
+        sourceUrl,
+      }),
+    );
+
     if (nextState) {
-      applyNextState(nextState);
+      applyNextState(nextState, "grid");
+      backToGrid();
     }
   }
 
-  async function handleImport() {
-    const nextState = await runAction("import", importRawMedia);
+  async function handleHideCurrent() {
+    const item = selectedItem();
+    if (!item) return;
+    const nextState = await runAction("hide", () =>
+      hideItems({ sourcePaths: [item.sourcePath] }),
+    );
     if (nextState) {
-      applyNextState(nextState);
+      applyNextState(nextState, "grid");
+      backToGrid();
     }
   }
 
-  async function handlePreview() {
-    const nextPreview = await runAction("preview", fetchApplyPreview);
-    if (nextPreview) setPreview(nextPreview);
-  }
-
-  async function handleApply() {
-    const nextState = await runAction("apply", applyApproved);
+  async function handleUnhideCurrent() {
+    const item = selectedItem();
+    if (!item) return;
+    const nextState = await runAction("unhide", () =>
+      unhideItem({ sourcePath: item.sourcePath }),
+    );
     if (nextState) {
-      applyNextState(nextState);
+      applyNextState(nextState, "grid");
+      backToGrid();
     }
-  }
-
-  function moveCursor(delta: number) {
-    const items = queue();
-    if (items.length === 0) return;
-    const next = (currentIndex() + delta + items.length) % items.length;
-    setCurrentId(items[next].id);
   }
 
   function chooseRealm(realm: ReviewRealm) {
@@ -178,64 +273,216 @@ export default function AdminPage() {
   }
 
   return (
-    <div class="page admin-page">
+    <div class={`page admin-page ${viewMode() === "grid" ? "is-grid" : "is-detail"}`}>
       <Show when={error()}>
         <section class="admin-alert">{error()}</section>
       </Show>
 
-      <Show when={state()} fallback={<section class="admin-empty">Loading admin state...</section>}>
-        {(resolved) => (
-          <>
-            <section class="admin-toolbar">
-              <div class="admin-title-block">
-                <p class="eyebrow">Review workstation</p>
-                <h1>Queue</h1>
-                <p class="admin-toolbar-copy">
-                  {resolved().summary.pending} pending / {resolved().summary.approved} staged /{" "}
-                  {resolved().summary.curated} curated
-                </p>
-              </div>
-              <div class="admin-toolbar-status">
-                <CompactStat label="Queue" value={resolved().summary.total} />
-                <CompactStat label="Pending" value={resolved().summary.pending} />
-                <CompactStat label="Staged" value={resolved().summary.approved} />
-                <CompactStat label="Rejected" value={resolved().summary.rejected} />
-                <CompactStat label="Skipped" value={resolved().summary.skipped} />
-                <CompactStat label="Curated" value={resolved().summary.curated} />
-              </div>
-              <div class="admin-actions">
-                <button class="button" onClick={handleImport} disabled={busyAction() !== ""}>
-                  Rebuild from raw
-                </button>
-                <button class="button" onClick={handlePreview} disabled={stagedItems().length === 0 || busyAction() !== ""}>
-                  Preview apply
-                </button>
-                <button class="button button-dark" onClick={handleApply} disabled={stagedItems().length === 0 || busyAction() !== ""}>
-                  Apply approved
-                </button>
-              </div>
-            </section>
+      <section class="admin-toolbar">
+        <div class="admin-title-block">
+          <h1>Archive</h1>
+          <p class="admin-toolbar-copy">
+            Grid first. Pick the pieces that belong in Kate&apos;s world.
+          </p>
+        </div>
+        <div class="admin-toolbar-status">
+          <CompactStat label="Total" value={state()?.summary.total ?? 0} />
+          <CompactStat label="Available" value={state()?.summary.available ?? 0} />
+          <CompactStat label="Approved" value={state()?.summary.approved ?? 0} />
+          <CompactStat label="Hidden" value={state()?.summary.hidden ?? 0} />
+        </div>
+        <div class="admin-actions">
+          <button class="button" onClick={() => void refreshState()} disabled={busyAction() !== "" || loading()}>
+            Refresh
+          </button>
+        </div>
+      </section>
 
-            <section class="admin-layout">
+      <Show when={!loading()} fallback={<section class="admin-empty">Loading archive...</section>}>
+        <Switch>
+          <Match when={viewMode() === "grid"}>
+            <section class="admin-grid-shell">
+              <div class="admin-grid-controls">
+                <div class="filter-cluster">
+                  <span class="admin-filter-label">Status</span>
+                  <div class="filter-chip-row">
+                    <button
+                      class={`filter-chip ${visibleStatuses().length === allStatuses.length ? "is-selected" : ""}`}
+                      onClick={showAllStatuses}
+                    >
+                      All
+                    </button>
+                    <For each={allStatuses}>
+                      {(status) => (
+                        <button
+                          class={`filter-chip ${visibleStatuses().includes(status) ? "is-selected" : ""}`}
+                          onClick={() => toggleStatusVisibility(status)}
+                        >
+                          {status}
+                        </button>
+                      )}
+                    </For>
+                    <button
+                      class={`filter-chip ${visibleStatuses().length === 1 && visibleStatuses()[0] === "available" ? "is-selected" : ""}`}
+                      onClick={showDefaultStatuses}
+                    >
+                      Available only
+                    </button>
+                  </div>
+                </div>
+
+                <div class="filter-cluster">
+                  <span class="admin-filter-label">Account</span>
+                  <div class="filter-chip-row">
+                        <button
+                          class={`filter-chip ${accountFilter() === "all" ? "is-selected" : ""}`}
+                          onClick={() => {
+                            setAccountFilter("all");
+                            setCurrentPage(1);
+                          }}
+                        >
+                          All
+                        </button>
+                    <For each={reviewAccounts}>
+                      {(account) => (
+                        <button
+                          class={`filter-chip ${accountFilter() === account ? "is-selected" : ""}`}
+                          onClick={() => {
+                            setAccountFilter(account);
+                            setCurrentPage(1);
+                          }}
+                        >
+                          {account}
+                        </button>
+                      )}
+                    </For>
+                  </div>
+                </div>
+              </div>
+
+              <Show when={selectedPaths().length > 0}>
+                <div class="admin-selection-bar admin-panel">
+                  <span>{selectedPaths().length} selected</span>
+                  <div class="admin-selection-actions">
+                    <button
+                      class="button button-dark"
+                      onClick={handleBulkHide}
+                      disabled={busyAction() !== ""}
+                    >
+                      Hide selected
+                    </button>
+                    <button class="button button-ghost" onClick={() => setSelectedPaths([])}>
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              </Show>
+
               <Show
-                when={currentItem()}
-                fallback={<div class="admin-empty">No pending media yet. Import raw media to start.</div>}
+                when={filteredItems().length > 0}
+                fallback={<div class="admin-empty">No items match the current filters.</div>}
               >
-                {(item) => (
-                  <>
-                    <div class="admin-panel admin-media-column">
-                      <div class="admin-preview-toolbar">
-                        <button class="button button-ghost" onClick={() => moveCursor(-1)}>
-                          Previous
-                        </button>
-                        <span>
-                          {queue().length === 0 ? "0 / 0" : `${currentIndex() + 1} / ${queue().length}`}
-                        </span>
-                        <button class="button button-ghost" onClick={() => moveCursor(1)}>
-                          Next
-                        </button>
-                      </div>
+                <div class="admin-pagination">
+                  <span>
+                    Page {currentPage()} / {totalPages()} · {filteredItems().length} items
+                  </span>
+                  <div class="admin-pagination-actions">
+                    <button
+                      class="button button-ghost"
+                      onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                      disabled={currentPage() <= 1}
+                    >
+                      Previous
+                    </button>
+                    <button
+                      class="button button-ghost"
+                      onClick={() => setCurrentPage((page) => Math.min(totalPages(), page + 1))}
+                      disabled={currentPage() >= totalPages()}
+                    >
+                      Next
+                    </button>
+                  </div>
+                </div>
+                <div class="admin-grid" ref={gridPane}>
+                  <For each={pagedItems()}>
+                    {(item) => (
+                      <div
+                        class={`admin-tile status-${item.status} ${selectedPathSet().has(item.sourcePath) ? "is-selected" : ""}`}
+                        onClick={() => openDetail(item)}
+                        onKeyDown={(event) => {
+                          if (event.key === "Enter" || event.key === " ") {
+                            event.preventDefault();
+                            openDetail(item);
+                          }
+                        }}
+                        role="button"
+                        tabindex="0"
+                      >
+                        <Show when={item.status === "available"}>
+                          <button
+                            class={`admin-select-toggle ${selectedPathSet().has(item.sourcePath) ? "is-selected" : ""}`}
+                            onClick={(event) => {
+                              event.stopPropagation();
+                              toggleSelection(item.sourcePath);
+                            }}
+                            aria-label={`Select ${item.postKey}`}
+                          >
+                            <span class="admin-select-toggle-mark" aria-hidden="true" />
+                          </button>
+                        </Show>
 
+                        <div class="admin-tile-media">
+                          <Switch>
+                            <Match when={item.mediaType === "video"}>
+                              <video src={item.previewUrl} muted playsinline preload="metadata" />
+                            </Match>
+                            <Match when={true}>
+                              <img src={item.previewUrl} alt={item.postKey} loading="lazy" />
+                            </Match>
+                          </Switch>
+                          <div class="admin-tile-meta">
+                            <div class="admin-badge-row">
+                              <span class="admin-badge">{item.account}</span>
+                              <span class={`admin-badge admin-badge-status status-${item.status}`}>
+                                {item.status}
+                              </span>
+                              <Show when={item.realm}>
+                                {(realm) => <span class="admin-badge admin-badge-realm">{realm()}</span>}
+                              </Show>
+                            </div>
+                            <div class="admin-tile-copy">
+                              <strong>{item.caption || item.postKey}</strong>
+                              <span>{formatShortDate(item.sourceDate)}</span>
+                            </div>
+                          </div>
+                          <Show when={item.mediaType === "video"}>
+                            <span class="admin-video-chip">Video</span>
+                          </Show>
+                        </div>
+                      </div>
+                    )}
+                  </For>
+                </div>
+              </Show>
+            </section>
+          </Match>
+
+          <Match when={true}>
+            <Show when={selectedItem()} fallback={<div class="admin-empty">Choose an item from the grid.</div>}>
+              {(item) => (
+                <section class="admin-detail-shell">
+                  <div class="admin-detail-toolbar">
+                    <button class="button button-ghost" onClick={backToGrid}>
+                      Back to grid
+                    </button>
+                    <div class="admin-detail-toolbar-copy">
+                      <strong>{item().postKey}</strong>
+                      <span>{item().status}</span>
+                    </div>
+                  </div>
+
+                  <div class="admin-layout">
+                    <div class="admin-panel admin-media-column">
                       <div class="admin-media-frame">
                         <Switch>
                           <Match when={item().mediaType === "video"}>
@@ -262,9 +509,14 @@ export default function AdminPage() {
                       <Show when={item().caption}>
                         <div class="admin-panel admin-caption-panel">
                           <p class="eyebrow">Caption</p>
-                          <div class="admin-caption">{item().caption}</div>
+                          <p class="admin-caption">{item().caption}</p>
                         </div>
                       </Show>
+
+                      <div class="admin-panel admin-caption-panel">
+                        <p class="eyebrow">Source path</p>
+                        <p class="admin-caption">{item().sourcePath}</p>
+                      </div>
                     </div>
 
                     <div class="admin-actions-column">
@@ -286,108 +538,76 @@ export default function AdminPage() {
                       </div>
 
                       <div class="admin-panel admin-panel-editor">
-                        <label class="admin-field admin-field-url">
+                        <div class="admin-field admin-field-url">
                           <span>Source URL</span>
-                          <input
-                            value={urlDraft()}
-                            onInput={(event) => setUrlDraft(event.currentTarget.value)}
-                            placeholder="https://www.instagram.com/p/..."
-                          />
-                        </label>
+                          <input value={urlDraft()} onInput={(event) => setUrlDraft(event.currentTarget.value)} />
+                        </div>
 
                         <TagGroup
-                          title="Vibes"
+                          label="Vibes"
                           values={reviewMoods}
                           selected={moodsDraft()}
                           onToggle={toggleMood}
                         />
-
                         <TagGroup
-                          title="Colors"
+                          label="Colors"
                           values={reviewColors}
                           selected={colorsDraft()}
                           onToggle={toggleColor}
                         />
-
                         <TagGroup
-                          title="Motifs"
+                          label="Motifs"
                           values={reviewMotifs}
                           selected={motifsDraft()}
                           onToggle={toggleMotif}
                         />
 
-                        <label class="admin-field admin-field-note">
+                        <div class="admin-field admin-field-note">
                           <span>Optional note</span>
                           <textarea
-                            rows="3"
                             value={noteDraft()}
                             onInput={(event) => setNoteDraft(event.currentTarget.value)}
-                            placeholder="anything the tags miss..."
                           />
-                        </label>
+                        </div>
 
                         <div class="admin-decision-row">
-                          <button class="button button-dark" onClick={() => updateCurrent("approved")} disabled={!currentItem() || busyAction() !== ""}>
-                            Approve to stage
+                          <button
+                            class="button button-dark"
+                            onClick={() => void handleApprove()}
+                            disabled={busyAction() !== "" || realmDraft() === ""}
+                          >
+                            {item().status === "approved" ? "Save changes" : "Approve"}
                           </button>
-                          <button class="button" onClick={() => updateCurrent("skipped")} disabled={!currentItem() || busyAction() !== ""}>
-                            Skip
-                          </button>
-                          <button class="button" onClick={() => updateCurrent("rejected")} disabled={!currentItem() || busyAction() !== ""}>
-                            Reject
-                          </button>
-                          <button class="button button-ghost" onClick={() => updateCurrent("pending")} disabled={!currentItem() || busyAction() !== ""}>
-                            Reset
-                          </button>
+                          <Show when={item().status === "hidden"}>
+                            <button
+                              class="button button-ghost"
+                              onClick={() => void handleUnhideCurrent()}
+                              disabled={busyAction() !== ""}
+                            >
+                              Unhide
+                            </button>
+                          </Show>
+                          <Show when={item().status !== "hidden"}>
+                            <button
+                              class="button button-ghost"
+                              onClick={() => void handleHideCurrent()}
+                              disabled={busyAction() !== ""}
+                            >
+                              Hide
+                            </button>
+                          </Show>
                         </div>
                       </div>
-
-                      <div class="admin-panel admin-panel-staged">
-                        <p class="eyebrow">Staged changes</p>
-                        <p class="admin-panel-copy">
-                          {stagedItems().length} item{stagedItems().length === 1 ? "" : "s"} waiting to be applied.
-                        </p>
-                        <Show when={preview()}>
-                          {(resolvedPreview) => (
-                            <div class="apply-preview-list">
-                              <For each={resolvedPreview().operations.slice(0, 8)}>
-                                {(operation) => (
-                                  <div class="apply-preview-item">
-                                    <strong>{operation.realm}</strong>
-                                    <span>{operation.destinationPath}</span>
-                                  </div>
-                                )}
-                              </For>
-                              <Show when={resolvedPreview().operations.length > 8}>
-                                <p class="admin-panel-copy">
-                                  +{resolvedPreview().operations.length - 8} more staged operations
-                                </p>
-                              </Show>
-                            </div>
-                          )}
-                        </Show>
-                      </div>
                     </div>
-                  </>
-                )}
-              </Show>
-            </section>
-          </>
-        )}
-      </Show>
-
-      <Show when={loading()}>
-        <div class="admin-loading">Refreshing admin state...</div>
+                  </div>
+                </section>
+              )}
+            </Show>
+          </Match>
+        </Switch>
       </Show>
     </div>
   );
-}
-
-function toggleValue<T extends string>(values: T[], value: T): T[] {
-  const safeValues = values ?? [];
-  return safeValues.includes(value)
-    ? safeValues.filter((entry) => entry !== value)
-    : [...safeValues, value];
 }
 
 function CompactStat(props: { label: string; value: number }) {
@@ -409,21 +629,19 @@ function MetaLine(props: { label: string; value: string }) {
 }
 
 function TagGroup<T extends string>(props: {
-  title: string;
+  label: string;
   values: readonly T[];
-  selected?: T[];
+  selected: readonly T[];
   onToggle: (value: T) => void;
 }) {
-  const selected = () => props.selected ?? [];
-
   return (
     <div class="tag-group">
-      <span class="tag-group-label">{props.title}</span>
+      <span class="tag-group-label">{props.label}</span>
       <div class="tag-pill-grid">
         <For each={props.values}>
           {(value) => (
             <button
-              class={`tag-pill ${selected().includes(value) ? "is-selected" : ""}`}
+              class={`tag-pill ${(props.selected ?? []).includes(value) ? "is-selected" : ""}`}
               onClick={() => props.onToggle(value)}
             >
               {value}

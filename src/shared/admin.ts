@@ -1,6 +1,6 @@
 export const reviewAccounts = ["kategonc", "visuartist"] as const;
 export const reviewRealms = ["studio", "orchard", "mirror", "practice", "play"] as const;
-export const reviewStatuses = ["pending", "approved", "rejected", "skipped"] as const;
+export const reviewStatuses = ["available", "approved", "hidden"] as const;
 export const reviewMediaTypes = ["image", "video"] as const;
 export const reviewMoods = [
   "tender",
@@ -52,7 +52,7 @@ export type ReviewMood = (typeof reviewMoods)[number];
 export type ReviewColor = (typeof reviewColors)[number];
 export type ReviewMotif = (typeof reviewMotifs)[number];
 
-export interface PendingQueueItem {
+export interface ReviewItem {
   id: string;
   account: ReviewAccount;
   sourcePath: string;
@@ -63,20 +63,16 @@ export interface PendingQueueItem {
   moods: ReviewMood[];
   colors: ReviewColor[];
   motifs: ReviewMotif[];
-  selectedRealm: ReviewRealm | null;
+  realm: ReviewRealm | null;
   status: ReviewStatus;
   mediaType: ReviewMediaType;
   postKey: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface QueueItem extends PendingQueueItem {
   previewUrl: string;
+  curatedPath: string | null;
 }
 
-export interface PendingQueue {
-  items: PendingQueueItem[];
+export interface HiddenList {
+  items: string[];
 }
 
 export interface CuratedItem {
@@ -101,37 +97,32 @@ export interface RealmManifest {
 
 export interface AdminSummary {
   total: number;
-  pending: number;
+  available: number;
   approved: number;
-  rejected: number;
-  skipped: number;
-  curated: number;
+  hidden: number;
 }
 
 export interface AdminState {
-  queue: QueueItem[];
+  items: ReviewItem[];
   manifests: RealmManifest[];
+  hidden: string[];
   summary: AdminSummary;
 }
 
-export interface ApplyPreviewOperation {
-  id: string;
-  realm: ReviewRealm;
+export interface ApproveItemPayload {
   sourcePath: string;
-  destinationPath: string;
+  selectedRealm: ReviewRealm;
+  note: string;
+  moods: ReviewMood[];
+  colors: ReviewColor[];
+  motifs: ReviewMotif[];
+  sourceUrl: string;
 }
 
-export interface ApplyPreview {
-  approvedCount: number;
-  operations: ApplyPreviewOperation[];
+export interface HideItemsPayload {
+  sourcePaths: string[];
 }
 
-export interface UpdateQueuePayload {
-  status?: ReviewStatus;
-  selectedRealm?: ReviewRealm | "";
-  note?: string;
-  moods?: ReviewMood[];
-  colors?: ReviewColor[];
-  motifs?: ReviewMotif[];
-  sourceUrl?: string;
+export interface UnhideItemPayload {
+  sourcePath: string;
 }
