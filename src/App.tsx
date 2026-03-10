@@ -275,6 +275,21 @@ function groupCaseStudyBlocks(blocks: CaseStudyBlock[]) {
   return sections;
 }
 
+function annotateCaseStudySections(blocks: CaseStudyBlock[]) {
+  let chapterIndex = 0;
+
+  return groupCaseStudyBlocks(blocks).map((section, toneIndex) => {
+    const isChapter = section.chapter;
+    if (isChapter) chapterIndex += 1;
+
+    return {
+      ...section,
+      toneIndex,
+      chapterIndex: isChapter ? chapterIndex : null,
+    };
+  });
+}
+
 function renderImageFigure(
   block: Extract<CaseStudyBlock, { type: "image" }>,
 ): JSX.Element {
@@ -330,15 +345,28 @@ function renderCaseStudyBlock(block: CaseStudyBlock): JSX.Element {
 function renderCaseStudySection(section: {
   chapter: boolean;
   blocks: CaseStudyBlock[];
+  toneIndex: number;
+  chapterIndex: number | null;
 }): JSX.Element {
   const nodes: JSX.Element[] = [];
   let imageGroup: Extract<CaseStudyBlock, { type: "image" }>[] = [];
+  let galleryCount = 0;
 
   const flushImages = () => {
     if (imageGroup.length === 0) return;
 
+    const isShowcase = section.chapter && galleryCount === 0;
+
     if (imageGroup.length === 1) {
-      nodes.push(renderImageFigure(imageGroup[0]));
+      if (isShowcase) {
+        nodes.push(
+          <div class="case-study-gallery case-study-gallery-solo case-study-gallery-showcase">
+            {renderImageFigure(imageGroup[0])}
+          </div>,
+        );
+      } else {
+        nodes.push(renderImageFigure(imageGroup[0]));
+      }
     } else {
       const galleryClass =
         imageGroup.length === 2
@@ -348,16 +376,55 @@ function renderCaseStudySection(section: {
             : "case-study-gallery-grid";
 
       nodes.push(
-        <div class={`case-study-gallery ${galleryClass}`}>
+        <div
+          class={`case-study-gallery ${galleryClass} ${isShowcase ? "case-study-gallery-showcase" : ""}`}
+        >
           <For each={imageGroup}>{(block) => renderImageFigure(block)}</For>
         </div>,
       );
     }
 
+    galleryCount += 1;
     imageGroup = [];
   };
 
-  for (const block of section.blocks) {
+  const hasChapterHeading =
+    section.chapter &&
+    section.blocks[0]?.type === "heading" &&
+    section.blocks[0].level === 1;
+
+  let remainingBlocks = section.blocks;
+
+  if (hasChapterHeading) {
+    const chapterHeading = section.blocks[0] as Extract<
+      CaseStudyBlock,
+      { type: "heading" }
+    >;
+
+    nodes.push(
+      <header class="case-study-chapter-header">
+        <p class="case-study-chapter-kicker">
+          Chapter {String(section.chapterIndex ?? 1).padStart(2, "0")}
+        </p>
+        {renderCaseStudyBlock(chapterHeading)}
+      </header>,
+    );
+
+    remainingBlocks = section.blocks.slice(1);
+  }
+
+  const chapterIntro: JSX.Element[] = [];
+
+  while (section.chapter && remainingBlocks[0]?.type === "paragraph") {
+    chapterIntro.push(renderCaseStudyBlock(remainingBlocks[0]));
+    remainingBlocks = remainingBlocks.slice(1);
+  }
+
+  if (chapterIntro.length > 0) {
+    nodes.push(<div class="case-study-chapter-intro">{chapterIntro}</div>);
+  }
+
+  for (const block of remainingBlocks) {
     if (block.type === "image") {
       imageGroup.push(block);
       continue;
@@ -371,7 +438,7 @@ function renderCaseStudySection(section: {
 
   return (
     <section
-      class={`case-study-section ${section.chapter ? "case-study-section-chapter" : ""}`}
+      class={`case-study-section ${section.chapter ? `case-study-section-chapter case-study-section-tone-${section.toneIndex % 4}` : "case-study-section-neutral"}`}
     >
       {nodes}
     </section>
@@ -392,10 +459,28 @@ function WorkPage() {
 
     const slides = resolved.media.slice(0, 5);
     if (slides.length < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
+    const burstSequence = [
+      0,
+      ...slides.slice(1, 4).map((_, index) => index + 1),
+      0,
+    ];
+
+    let step = 0;
     const timer = window.setInterval(() => {
-      setHeroSlideIndex((current) => (current + 1) % slides.length);
-    }, 4500);
+      step += 1;
+      if (step >= burstSequence.length) {
+        window.clearInterval(timer);
+        return;
+      }
+
+      setHeroSlideIndex(burstSequence[step]);
+
+      if (step === burstSequence.length - 1) {
+        window.clearInterval(timer);
+      }
+    }, 850);
 
     onCleanup(() => window.clearInterval(timer));
   });
@@ -406,7 +491,6 @@ function WorkPage() {
         const realm = () => getRealmBySlug(resolvedWork().realmSlug);
         const related = () => getRelatedWorks(resolvedWork().slug);
         const heroSlides = () => resolvedWork().media.slice(0, 5);
-        const caseStudySections = () => groupCaseStudyBlocks(displayBlocks());
         const displayBlocks = () => {
           const blocks = [...(resolvedWork().blocks ?? [])];
 
@@ -430,6 +514,7 @@ function WorkPage() {
 
           return blocks;
         };
+        const caseStudySections = () => annotateCaseStudySections(displayBlocks());
 
         return (
           <div class="page page-work">
@@ -479,6 +564,7 @@ function WorkPage() {
                   <p class="work-summary">{resolvedWork().summary}</p>
                 </div>
                 <div class="work-meta-side">
+                  <p class="work-meta-label">Project dossier</p>
                   <dl class="work-facts">
                     <div>
                       <dt>Year</dt>
@@ -488,12 +574,22 @@ function WorkPage() {
                       <dt>Medium</dt>
                       <dd>{resolvedWork().medium}</dd>
                     </div>
+                    <div>
+                      <dt>Focus</dt>
+                      <dd class="work-facts-tags">
+                        <For each={resolvedWork().tags}>
+                          {(tag, index) => (
+                            <>
+                              <span>{tag}</span>
+                              <Show when={index() < resolvedWork().tags.length - 1}>
+                                <span class="work-facts-separator"> / </span>
+                              </Show>
+                            </>
+                          )}
+                        </For>
+                      </dd>
+                    </div>
                   </dl>
-                  <div class="work-tag-cluster">
-                    <For each={resolvedWork().tags}>
-                      {(tag) => <span>{tag}</span>}
-                    </For>
-                  </div>
                 </div>
               </div>
             </section>
