@@ -687,7 +687,7 @@ button:disabled {
   border-radius: 2rem;
   background: var(--chapter-bg);
   border: 1px solid rgba(31, 26, 23, 0.06);
-  box-shadow: var(--shadow);
+  box-shadow: 0 18px 46px rgba(72, 48, 28, 0.08);
 }
 
 .case-study-section-chapter::before {
@@ -824,7 +824,7 @@ button:disabled {
   border-radius: 1.7rem;
   background: rgba(255, 253, 248, 0.82);
   border: 1px solid rgba(31, 26, 23, 0.08);
-  box-shadow: var(--shadow);
+  box-shadow: 0 16px 34px rgba(72, 48, 28, 0.08);
 }
 
 .case-study-figure img {
@@ -863,7 +863,7 @@ button:disabled {
   border-radius: 1.8rem;
   background: var(--gallery-shell);
   border: 1px solid rgba(31, 26, 23, 0.06);
-  box-shadow: var(--shadow);
+  box-shadow: 0 16px 38px rgba(72, 48, 28, 0.07);
 }
 
 .case-study-gallery .case-study-figure {
@@ -923,6 +923,122 @@ button:disabled {
   padding: 1rem 1.1rem 1.2rem;
   color: var(--muted);
   font-size: 0.92rem;
+}
+
+.related-shell {
+  padding: 1.9rem 1.35rem 1.35rem;
+  border-radius: 2rem;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 246, 0.94), rgba(248, 241, 231, 0.86)),
+    radial-gradient(circle at top right, rgba(174, 201, 117, 0.12), transparent 30%);
+  border: 1px solid rgba(31, 26, 23, 0.07);
+  box-shadow: 0 18px 46px rgba(72, 48, 28, 0.08);
+}
+
+.related-header {
+  display: grid;
+  gap: 0.4rem;
+  margin-bottom: 1.35rem;
+}
+
+.related-header h2 {
+  margin: 0;
+  max-width: 9ch;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2.6rem, 5.5vw, 4.4rem);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.related-copy {
+  margin: 0;
+  max-width: 30rem;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.related-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.related-card {
+  --related-card-bg: linear-gradient(180deg, rgba(255, 253, 248, 0.94), rgba(248, 241, 231, 0.82));
+  --related-media-bg: rgba(255, 253, 248, 0.82);
+  display: grid;
+  gap: 0.9rem;
+  padding: 1rem;
+  border-radius: 1.65rem;
+  background: var(--related-card-bg);
+  border: 1px solid rgba(31, 26, 23, 0.07);
+  box-shadow: 0 14px 34px rgba(72, 48, 28, 0.08);
+}
+
+.related-card-tone-0 {
+  --related-card-bg:
+    linear-gradient(180deg, rgba(252, 245, 239, 0.96), rgba(249, 241, 231, 0.84));
+  --related-media-bg: rgba(250, 235, 219, 0.78);
+}
+
+.related-card-tone-1 {
+  --related-card-bg:
+    linear-gradient(180deg, rgba(244, 248, 243, 0.96), rgba(238, 246, 239, 0.84));
+  --related-media-bg: rgba(224, 237, 226, 0.78);
+}
+
+.related-card-tone-2 {
+  --related-card-bg:
+    linear-gradient(180deg, rgba(242, 244, 248, 0.96), rgba(238, 241, 247, 0.84));
+  --related-media-bg: rgba(223, 230, 243, 0.8);
+}
+
+.related-card-media {
+  display: grid;
+  place-items: center;
+  min-height: 11rem;
+  padding: 0.9rem;
+  border-radius: 1.35rem;
+  background: var(--related-media-bg);
+  border: 1px solid rgba(31, 26, 23, 0.06);
+  overflow: hidden;
+}
+
+.related-card-media img {
+  width: auto;
+  max-width: 100%;
+  height: 11rem;
+  object-fit: contain;
+}
+
+.related-card-copy {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.related-card-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.68rem;
+  color: rgba(31, 26, 23, 0.5);
+}
+
+.related-card h3 {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.9rem, 3vw, 2.5rem);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+}
+
+.related-card-copy > p:not(.related-card-kicker) {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.72;
+  font-size: 0.98rem;
 }
 
 .page-not-found {
@@ -1005,6 +1121,18 @@ button:disabled {
 
   .case-study-flow {
     max-width: 100%;
+  }
+
+  .related-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .related-card-media {
+    min-height: 9rem;
+  }
+
+  .related-card-media img {
+    height: 9rem;
   }
 
   .case-study-gallery-pair,

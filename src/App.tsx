@@ -461,28 +461,20 @@ function WorkPage() {
     if (slides.length < 2) return;
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
 
-    const burstSequence = [
-      0,
-      ...slides.slice(1, 4).map((_, index) => index + 1),
-      0,
-    ];
+    const introSlides = slides.slice(1, 4).map((_, index) => index + 1);
+    const timers: number[] = [];
+    let elapsed = 1450;
 
-    let step = 0;
-    const timer = window.setInterval(() => {
-      step += 1;
-      if (step >= burstSequence.length) {
-        window.clearInterval(timer);
-        return;
-      }
+    for (const slideIndex of introSlides) {
+      timers.push(window.setTimeout(() => setHeroSlideIndex(slideIndex), elapsed));
+      elapsed += 720;
+    }
 
-      setHeroSlideIndex(burstSequence[step]);
+    timers.push(window.setTimeout(() => setHeroSlideIndex(0), elapsed));
 
-      if (step === burstSequence.length - 1) {
-        window.clearInterval(timer);
-      }
-    }, 850);
-
-    onCleanup(() => window.clearInterval(timer));
+    onCleanup(() => {
+      for (const timer of timers) window.clearTimeout(timer);
+    });
   });
 
   return (
@@ -620,22 +612,35 @@ function WorkPage() {
 
             <Show when={related().length > 0}>
               <section class="related-section">
-                <div class="section-heading">
-                  <p class="eyebrow">Nearby pieces</p>
-                  <h2>Other works in Kate&apos;s orbit</h2>
-                </div>
-                <div class="featured-grid">
+                <div class="related-shell">
+                  <div class="related-header">
+                    <p class="eyebrow">Nearby pieces</p>
+                    <h2>Other works in Kate&apos;s orbit</h2>
+                    <p class="related-copy">
+                      Adjacent studies from the same visual world.
+                    </p>
+                  </div>
+                  <div class="related-grid">
                   <For each={related()}>
-                    {(item) => (
-                      <A href={`/work/${item.slug}`} class="work-tile">
-                        <img src={asset(item.media[0].src)} alt={item.media[0].alt} />
-                        <div class="work-tile-copy">
-                          <span>{item.year}</span>
-                          <strong>{item.title}</strong>
+                    {(item, index) => (
+                      <A
+                        href={`/work/${item.slug}`}
+                        class={`related-card related-card-tone-${index() % 3}`}
+                      >
+                        <figure class="related-card-media">
+                          <img src={asset(item.media[0].src)} alt={item.media[0].alt} />
+                        </figure>
+                        <div class="related-card-copy">
+                          <p class="related-card-kicker">
+                            {item.year} / {item.medium}
+                          </p>
+                          <h3>{item.title}</h3>
+                          <p>{item.summary}</p>
                         </div>
                       </A>
                     )}
                   </For>
+                  </div>
                 </div>
               </section>
             </Show>
