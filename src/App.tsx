@@ -2,7 +2,7 @@ import { A, Route, Router, useLocation, useParams } from "@solidjs/router";
 import { For, Show, createEffect, createSignal, onCleanup } from "solid-js";
 import type { JSX, ParentProps } from "solid-js";
 import AdminPage from "./admin/AdminPage";
-import type { CaseStudyBlock, RichTextSpan } from "./data/schema";
+import type { CaseStudyBlock, MediaItem, RichTextSpan } from "./data/schema";
 import {
   asset,
   getRealmBySlug,
@@ -70,6 +70,37 @@ function RootShell(props: ParentProps) {
   );
 }
 
+function renderMediaAsset(
+  media: MediaItem,
+  options?: {
+    class?: string;
+    autoplay?: boolean;
+  },
+): JSX.Element {
+  if (media.kind === "video") {
+    return (
+      <video
+        class={options?.class}
+        src={asset(media.src)}
+        aria-label={media.alt}
+        muted
+        playsinline
+        loop
+        preload="metadata"
+        autoplay={options?.autoplay ?? true}
+      />
+    );
+  }
+
+  return (
+    <img
+      class={options?.class}
+      src={asset(media.src)}
+      alt={media.alt}
+    />
+  );
+}
+
 function HomePage() {
   const realms = getRealms();
 
@@ -121,7 +152,7 @@ function HomePage() {
             {(realm) => (
               <A href={`/realm/${realm.slug}`} class="realm-card">
                 <figure class="realm-card-media">
-                  <img src={asset(realm.coverMedia.src)} alt={realm.coverMedia.alt} />
+                  {renderMediaAsset(realm.coverMedia)}
                 </figure>
                 <div class="realm-card-copy">
                   <p class="realm-card-kicker">{realm.subtitle}</p>
@@ -150,7 +181,7 @@ function HomePage() {
           <For each={siteManifest.works.slice(0, 6)}>
             {(work) => (
               <A href={`/work/${work.slug}`} class="work-tile">
-                <img src={asset(work.media[0].src)} alt={work.media[0].alt} />
+                {renderMediaAsset(work.media[0])}
                 <div class="work-tile-copy">
                   <span>{work.year}</span>
                   <strong>{work.title}</strong>
@@ -181,10 +212,7 @@ function RealmPage() {
               <p>{resolvedRealm().intro}</p>
             </div>
             <figure class="realm-hero-figure">
-              <img
-                src={asset(resolvedRealm().coverMedia.src)}
-                alt={resolvedRealm().coverMedia.alt}
-              />
+              {renderMediaAsset(resolvedRealm().coverMedia)}
             </figure>
           </section>
 
@@ -198,7 +226,7 @@ function RealmPage() {
               {(work) => (
                 <A href={`/work/${work.slug}`} class="work-panel">
                   <figure class="work-panel-media">
-                    <img src={asset(work.media[0].src)} alt={work.media[0].alt} />
+                    {renderMediaAsset(work.media[0])}
                   </figure>
                   <div class="work-panel-copy">
                     <p class="panel-kicker">
@@ -295,7 +323,7 @@ function renderImageFigure(
 ): JSX.Element {
   return (
     <figure class="case-study-figure">
-      <img src={asset(block.media.src)} alt={block.media.alt} />
+      {renderMediaAsset(block.media, { autoplay: false })}
       <Show when={block.media.caption}>
         <figcaption>{block.media.caption}</figcaption>
       </Show>
@@ -518,7 +546,7 @@ function WorkPage() {
                       <figure
                         class={`work-hero-media ${index() === heroSlideIndex() ? "is-active" : ""}`}
                       >
-                        <img src={asset(media.src)} alt={media.alt} />
+                        {renderMediaAsset(media)}
                       </figure>
                     )}
                   </For>
@@ -593,7 +621,7 @@ function WorkPage() {
                   <For each={resolvedWork().media.slice(1)}>
                     {(media) => (
                       <figure class="media-card">
-                        <img src={asset(media.src)} alt={media.alt} />
+                        {renderMediaAsset(media)}
                         <Show when={media.caption}>
                           <figcaption>{media.caption}</figcaption>
                         </Show>
@@ -628,7 +656,7 @@ function WorkPage() {
                         class={`related-card related-card-tone-${index() % 3}`}
                       >
                         <figure class="related-card-media">
-                          <img src={asset(item.media[0].src)} alt={item.media[0].alt} />
+                          {renderMediaAsset(item.media[0])}
                         </figure>
                         <div class="related-card-copy">
                           <p class="related-card-kicker">

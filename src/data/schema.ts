@@ -1,11 +1,11 @@
 export type RealmSlug =
   | "studio"
   | "orchard"
-  | "rooms"
+  | "mirror"
   | "practice"
   | "play";
 
-export type MediaKind = "image";
+export type MediaKind = "image" | "video";
 
 export interface MediaItem {
   src: string;

@@ -1,42 +1,178 @@
+import mirrorMeta from "./realms/mirror/meta";
+import orchardMeta from "./realms/orchard/meta";
+import playMeta from "./realms/play/meta";
 import practiceMeta, { practiceProjects } from "./realms/practice/meta";
-import type { Realm, RealmSlug, Work } from "./schema";
+import studioMeta from "./realms/studio/meta";
+import type { MediaItem, MediaKind, Realm, RealmSlug, Work } from "./schema";
+
+interface CuratedManifestItem {
+  id: string;
+  account: string;
+  realm: "studio" | "orchard" | "mirror" | "practice" | "play";
+  sourcePath: string;
+  sourceUrl: string;
+  note: string;
+  moods: string[];
+  colors: string[];
+  motifs: string[];
+  fileName: string;
+  curatedPath: string;
+  createdAt: string;
+}
+
+interface CuratedManifest {
+  realm: CuratedManifestItem["realm"];
+  items: CuratedManifestItem[];
+}
+
+const curatedAssetModules = import.meta.glob(
+  "../../archive/curated/**/*.{jpg,jpeg,png,webp,gif,mp4,mov,webm}",
+  { eager: true, import: "default" },
+) as Record<string, string>;
+
+const curatedManifestModules = import.meta.glob("../../archive/manifests/*.json", {
+  eager: true,
+  import: "default",
+}) as Record<string, CuratedManifest>;
+
+function assetModulePath(archivePath: string): string {
+  return `../../${archivePath}`;
+}
+
+function getCuratedAssetPath(archivePath: string): string {
+  const modulePath = assetModulePath(archivePath);
+  const assetPath = curatedAssetModules[modulePath];
+
+  if (!assetPath) {
+    throw new Error(`missing curated asset import for ${archivePath}`);
+  }
+
+  return assetPath;
+}
+
+function extensionToMediaKind(fileName: string): MediaKind {
+  return /\.(mp4|mov|webm)$/i.test(fileName) ? "video" : "image";
+}
+
+function realmTitleCase(slug: RealmSlug): string {
+  return slug.charAt(0).toUpperCase() + slug.slice(1);
+}
+
+function parseSourceDate(sourcePath: string): string {
+  const match = sourcePath.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if (!match) return "";
+
+  const [, year, month, day] = match;
+  const date = new Date(`${year}-${month}-${day}T00:00:00Z`);
+
+  return new Intl.DateTimeFormat("en", {
+    month: "long",
+    day: "numeric",
+    year: "numeric",
+    timeZone: "UTC",
+  }).format(date);
+}
+
+function deriveCuratedTitle(item: CuratedManifestItem): string {
+  const motif = item.motifs[0];
+  const mood = item.moods[0];
+  const sourceDate = parseSourceDate(item.sourcePath);
+
+  if (motif && sourceDate) {
+    return `${realmTitleCase(item.realm as RealmSlug)} ${motif} study, ${sourceDate}`;
+  }
+
+  if (mood && sourceDate) {
+    return `${realmTitleCase(item.realm as RealmSlug)} ${mood} study, ${sourceDate}`;
+  }
+
+  return `${realmTitleCase(item.realm as RealmSlug)} study ${item.fileName}`;
+}
+
+function deriveCuratedSummary(item: CuratedManifestItem): string {
+  if (item.note.trim()) return item.note.trim();
+
+  const fragments = [
+    item.moods.length > 0 ? item.moods.join(", ") : "",
+    item.colors.length > 0 ? item.colors.join(", ") : "",
+    item.motifs.length > 0 ? item.motifs.join(", ") : "",
+  ].filter(Boolean);
+
+  if (fragments.length === 0) {
+    return `Curated archive piece from Kate's ${item.realm} realm.`;
+  }
+
+  return `Curated archive piece shaped by ${fragments.join(" / ")}.`;
+}
+
+function deriveCuratedTags(item: CuratedManifestItem): string[] {
+  return [...item.moods, ...item.colors, ...item.motifs];
+}
+
+function createCuratedMedia(item: CuratedManifestItem): MediaItem {
+  return {
+    src: getCuratedAssetPath(item.curatedPath),
+    alt: item.note.trim() || deriveCuratedTitle(item),
+    kind: extensionToMediaKind(item.fileName),
+  };
+}
+
+function createCuratedWork(item: CuratedManifestItem): Work {
+  const media = createCuratedMedia(item);
+  const sourceDate = parseSourceDate(item.sourcePath);
+
+  return {
+    slug: `${item.realm}-${item.id}`,
+    title: deriveCuratedTitle(item),
+    year: sourceDate ? sourceDate.slice(-4) : "",
+    medium: media.kind === "video" ? "Moving image" : "Curated image",
+    summary: deriveCuratedSummary(item),
+    tags: deriveCuratedTags(item),
+    realmSlug: item.realm as RealmSlug,
+    archiveHref: item.sourceUrl,
+    media: [media],
+  };
+}
+
+function getManifest(realm: CuratedManifestItem["realm"]): CuratedManifest {
+  const manifestPath = `../../archive/manifests/${realm}.json`;
+  const manifest = curatedManifestModules[manifestPath];
+
+  if (!manifest) {
+    throw new Error(`missing curated manifest for ${realm}`);
+  }
+
+  return manifest;
+}
+
+const curatedWorksByRealm: Record<Exclude<RealmSlug, "practice">, Work[]> = {
+  studio: getManifest("studio").items.map(createCuratedWork),
+  orchard: getManifest("orchard").items.map(createCuratedWork),
+  mirror: getManifest("mirror").items.map(createCuratedWork),
+  play: getManifest("play").items.map(createCuratedWork),
+};
 
 const realms: Realm[] = [
   {
     slug: "studio",
-    name: "Studio",
-    subtitle: "drawings, marks, visual studies",
-    intro:
-      "A room for sketches, posters, symbols, and graphic instincts. This is where line, texture, and mood arrive before they explain themselves.",
-    coverMedia: {
-      src: "/resources/notion_portfolio/Portfolio - Kate/Projects/The soul codes - Logo/the_soul_codes_mockup_list_(1).png",
-      alt: "Logo studies and symbolic forms from Kate's visual studio.",
-      kind: "image",
-    },
+    name: studioMeta.name,
+    subtitle: studioMeta.subtitle,
+    intro: studioMeta.description,
+    coverMedia: curatedWorksByRealm.studio[0]?.media[0] ?? practiceProjects[13].coverImage,
   },
   {
     slug: "orchard",
-    name: "Orchard",
-    subtitle: "flowers, color, citrus, still life energy",
-    intro:
-      "Color stories, soft branding, campaign fragments, and objects with warmth. The orchard is where fruit, paper, petals, and graphic rhythm meet.",
-    coverMedia: {
-      src: "/resources/notion_portfolio/Portfolio - Kate/Projects/Future Lab Merchandise/Curiosity_11zon.png",
-      alt: "Colorful merchandise graphic with a warm citrus energy.",
-      kind: "image",
-    },
+    name: orchardMeta.name,
+    subtitle: orchardMeta.subtitle,
+    intro: orchardMeta.description,
+    coverMedia: curatedWorksByRealm.orchard[0]?.media[0] ?? practiceProjects[6].coverImage,
   },
   {
-    slug: "rooms",
-    name: "Rooms",
-    subtitle: "atmosphere, objects, editorial spaces",
-    intro:
-      "Worlds built from interiors, objects, fashion touches, and spatial quiet. These works feel like stepping into light, fabric, shadow, and placement.",
-    coverMedia: {
-      src: "/resources/notion_portfolio/Portfolio - Kate/Projects/Elara jewellery website/Main_ready.png",
-      alt: "Jewellery editorial interface evoking an intimate interior space.",
-      kind: "image",
-    },
+    slug: "mirror",
+    name: mirrorMeta.name,
+    subtitle: mirrorMeta.subtitle,
+    intro: mirrorMeta.description,
+    coverMedia: curatedWorksByRealm.mirror[0]?.media[0] ?? practiceProjects[0].coverImage,
   },
   {
     slug: "practice",
@@ -48,19 +184,14 @@ const realms: Realm[] = [
   },
   {
     slug: "play",
-    name: "Play",
-    subtitle: "experiments, motion, image collisions",
-    intro:
-      "The experimental corner: AI-assisted campaigns, bolder graphic motion, and image-making that behaves more like improvisation than layout.",
-    coverMedia: {
-      src: "/resources/notion_portfolio/Portfolio - Kate/Projects/Firstmovr x Colgate-Palmolive/image 3.png",
-      alt: "Bright campaign image full of layered digital play.",
-      kind: "image",
-    },
+    name: playMeta.name,
+    subtitle: playMeta.subtitle,
+    intro: playMeta.description,
+    coverMedia: curatedWorksByRealm.play[0]?.media[0] ?? practiceProjects[5].coverImage,
   },
 ];
 
-const works: Work[] = practiceProjects.map((project) => ({
+const practiceWorks: Work[] = practiceProjects.map((project) => ({
   slug: project.slug,
   title: project.title,
   year: project.year,
@@ -73,10 +204,27 @@ const works: Work[] = practiceProjects.map((project) => ({
   blocks: project.blocks,
 }));
 
+const works: Work[] = [
+  ...curatedWorksByRealm.studio,
+  ...curatedWorksByRealm.orchard,
+  ...curatedWorksByRealm.mirror,
+  ...practiceWorks,
+  ...curatedWorksByRealm.play,
+];
+
 export const siteManifest: { realms: Realm[]; works: Work[] } = {
   realms,
   works,
 };
+
+function normalizeRealmSlug(slug: string): RealmSlug | undefined {
+  if (slug === "rooms") return "mirror";
+  if (slug === "studio" || slug === "orchard" || slug === "mirror" || slug === "practice" || slug === "play") {
+    return slug;
+  }
+
+  return undefined;
+}
 
 export function asset(path: string): string {
   return encodeURI(path);
@@ -87,7 +235,10 @@ export function getRealms(): Realm[] {
 }
 
 export function getRealmBySlug(slug: string): Realm | undefined {
-  return siteManifest.realms.find((realm) => realm.slug === slug);
+  const normalizedSlug = normalizeRealmSlug(slug);
+  if (!normalizedSlug) return undefined;
+
+  return siteManifest.realms.find((realm) => realm.slug === normalizedSlug);
 }
 
 export function getWorks(): Work[] {
@@ -99,10 +250,13 @@ export function getWorkBySlug(slug: string): Work | undefined {
 }
 
 export function getWorksForRealm(slug: string): Work[] {
+  const normalizedSlug = normalizeRealmSlug(slug);
+  if (!normalizedSlug) return [];
+
   return siteManifest.works.filter(
     (work) =>
-      work.realmSlug === slug ||
-      work.relatedRealmSlugs?.includes(slug as RealmSlug),
+      work.realmSlug === normalizedSlug ||
+      work.relatedRealmSlugs?.includes(normalizedSlug),
   );
 }
 
