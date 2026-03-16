@@ -185,7 +185,7 @@ button:disabled {
   z-index: 1;
   display: grid;
   justify-items: center;
-  gap: 1.4rem;
+  gap: 1.2rem;
   text-align: center;
 }
 
@@ -195,13 +195,119 @@ button:disabled {
   aspect-ratio: 1;
   display: grid;
   place-items: center;
+  isolation: isolate;
 }
 
 .citrus-interlude-fruit {
+   position: relative;
+   z-index: 2;
   width: 100%;
   height: auto;
   overflow: visible;
   filter: drop-shadow(0 30px 52px rgba(111, 77, 41, 0.18));
+}
+
+.citrus-interlude-aura,
+.citrus-interlude-scent,
+.citrus-interlude-orbit {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.citrus-interlude-aura {
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.54);
+  opacity: 0;
+  animation: citrus-aura-pulse 2100ms ease-out 120ms forwards;
+}
+
+.citrus-interlude-aura-outer {
+  inset: 4%;
+  background: radial-gradient(circle, rgba(255, 248, 225, 0.18), transparent 68%);
+}
+
+.citrus-interlude-aura-inner {
+  inset: 14%;
+  background: radial-gradient(circle, rgba(255, 251, 241, 0.22), transparent 72%);
+  animation-duration: 1860ms;
+  animation-delay: 220ms;
+}
+
+.citrus-interlude-scent,
+.citrus-interlude-orbit {
+  overflow: visible;
+}
+
+.citrus-scent-mote {
+  position: absolute;
+  left: var(--mote-left);
+  bottom: var(--mote-bottom);
+  width: var(--mote-size);
+  height: var(--mote-size);
+  margin-left: calc(var(--mote-size) * -0.5);
+  border-radius: 999px;
+  background: radial-gradient(circle, rgba(255, 251, 244, 0.96), rgba(255, 240, 214, 0.38));
+  opacity: 0;
+  animation: citrus-scent-rise 1480ms ease-out var(--mote-delay) forwards;
+}
+
+.citrus-orbit-glyph {
+  position: absolute;
+  left: var(--glyph-left);
+  top: var(--glyph-top);
+  width: var(--glyph-size);
+  height: var(--glyph-size);
+  transform: translate(-50%, -50%) rotate(var(--glyph-rotation)) scale(0.8);
+  opacity: 0;
+  animation: citrus-glyph-drift 1440ms cubic-bezier(0.18, 0.9, 0.24, 1) var(--glyph-delay) forwards;
+}
+
+.citrus-orbit-glyph::before,
+.citrus-orbit-glyph::after {
+  content: "";
+  position: absolute;
+}
+
+.citrus-orbit-glyph-leaf {
+  border-radius: 100% 0 100% 0;
+  background: linear-gradient(135deg, rgba(144, 180, 116, 0.98), rgba(97, 129, 82, 0.94));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.24);
+}
+
+.citrus-orbit-glyph-leaf::before {
+  left: 48%;
+  top: 16%;
+  width: 1px;
+  height: 68%;
+  transform: rotate(34deg);
+  transform-origin: top center;
+  background: rgba(244, 248, 236, 0.72);
+}
+
+.citrus-orbit-glyph-petal {
+  border-radius: 75% 75% 75% 0;
+  background: radial-gradient(circle at 30% 30%, rgba(255, 245, 243, 0.96), rgba(239, 182, 178, 0.92));
+}
+
+.citrus-orbit-glyph-petal::before {
+  inset: 20% 36% 20% 36%;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.52);
+}
+
+.citrus-orbit-glyph-blossom {
+  border-radius: 999px;
+  background: rgba(255, 252, 247, 0.94);
+  box-shadow:
+    0 0 0 0.36rem rgba(255, 246, 236, 0.6),
+    0 0 0 0.7rem rgba(255, 246, 236, 0.28);
+}
+
+.citrus-orbit-glyph-blossom::before {
+  inset: 32%;
+  border-radius: 999px;
+  background: rgba(244, 213, 82, 0.9);
 }
 
 .citrus-interlude-cut-line {
@@ -214,6 +320,7 @@ button:disabled {
   transform-origin: center top;
   background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(31, 26, 23, 0.3), rgba(255, 255, 255, 0));
   opacity: 0.7;
+  z-index: 3;
   animation: citrus-cut-line var(--cut-duration) cubic-bezier(0.22, 1, 0.36, 1) 160ms forwards;
 }
 
@@ -289,7 +396,7 @@ button:disabled {
 
 .citrus-interlude-copy {
   display: grid;
-  gap: 0.45rem;
+  gap: 0.5rem;
   justify-items: center;
   max-width: 28rem;
 }
@@ -324,6 +431,52 @@ button:disabled {
   color: rgba(31, 26, 23, 0.66);
   font-size: 1rem;
   line-height: 1.7;
+}
+
+.citrus-interlude-notes {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.citrus-interlude-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  background: rgba(255, 250, 241, 0.58);
+  border: 1px solid rgba(31, 26, 23, 0.06);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.62rem;
+  color: rgba(31, 26, 23, 0.48);
+}
+
+.citrus-interlude-note::before {
+  content: "";
+  width: 0.36rem;
+  height: 0.36rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(244, 213, 82, 0.98), rgba(244, 196, 136, 0.88));
+}
+
+.citrus-interlude-progress {
+  position: relative;
+  width: min(18rem, 76vw);
+  height: 1px;
+  overflow: hidden;
+  background: rgba(31, 26, 23, 0.08);
+}
+
+.citrus-interlude-progress-beam {
+  position: absolute;
+  inset: 0 auto 0 -24%;
+  width: 44%;
+  background: linear-gradient(90deg, rgba(244, 213, 82, 0), rgba(244, 213, 82, 0.96), rgba(239, 182, 178, 0.68), rgba(244, 213, 82, 0));
+  animation: citrus-progress-sweep 1360ms cubic-bezier(0.22, 1, 0.36, 1) 240ms forwards;
 }
 
 .citrus-interlude-haze,
@@ -405,6 +558,103 @@ button:disabled {
   }
 }
 
+@keyframes citrus-aura-pulse {
+  0% {
+    transform: scale(0.9);
+    opacity: 0;
+  }
+
+  30% {
+    opacity: 0.64;
+  }
+
+  100% {
+    transform: scale(1.08);
+    opacity: 0;
+  }
+}
+
+@keyframes citrus-scent-rise {
+  0% {
+    transform: translateY(0) scale(0.72);
+    opacity: 0;
+  }
+
+  24% {
+    opacity: 0.8;
+  }
+
+  100% {
+    transform: translateY(var(--mote-drift-y)) scale(1.04);
+    opacity: 0;
+  }
+}
+
+@keyframes citrus-glyph-drift {
+  0% {
+    transform: translate(-50%, -50%) rotate(var(--glyph-rotation)) scale(0.74);
+    opacity: 0;
+  }
+
+  28% {
+    opacity: 0.94;
+  }
+
+  100% {
+    transform: translate(calc(-50% + var(--glyph-drift-x)), calc(-50% + var(--glyph-drift-y))) rotate(calc(var(--glyph-rotation) + 8deg)) scale(1);
+    opacity: 0;
+  }
+}
+
+@keyframes citrus-progress-sweep {
+  0% {
+    transform: translateX(0);
+    opacity: 0;
+  }
+
+  12% {
+    opacity: 1;
+  }
+
+  100% {
+    transform: translateX(270%);
+    opacity: 0.2;
+  }
+}
+
+@keyframes still-life-breathe {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.04);
+  }
+}
+
+@keyframes still-life-sway {
+  0%,
+  100% {
+    transform: rotate(var(--sway-start, 0deg));
+  }
+
+  50% {
+    transform: rotate(var(--sway-end, 4deg));
+  }
+}
+
+@keyframes still-life-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-0.4rem);
+  }
+}
+
 .admin-header-label {
   font-size: 0.64rem;
   text-transform: uppercase;
@@ -428,15 +678,34 @@ button:disabled {
 
 .nav-link,
 .button {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border: 1px solid var(--line);
   border-radius: 999px;
   padding: 0.7rem 1rem;
   background: rgba(255, 253, 248, 0.72);
   backdrop-filter: blur(10px);
+  overflow: hidden;
   transition:
     background-color 160ms ease,
     border-color 160ms ease,
     color 160ms ease;
+}
+
+.nav-link::after,
+.button::after {
+  content: "";
+  position: absolute;
+  left: 0.8rem;
+  right: 0.8rem;
+  bottom: 0.32rem;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(244, 213, 82, 0), rgba(244, 213, 82, 0.86), rgba(239, 182, 178, 0.62), rgba(244, 213, 82, 0));
+  opacity: 0;
+  transform: translateX(-18%);
+  transition: transform 220ms ease, opacity 220ms ease;
 }
 
 .nav-link:hover {
@@ -444,10 +713,13 @@ button:disabled {
   background: rgba(255, 253, 248, 0.95);
 }
 
+.nav-link:hover::after,
+.button:hover:not(:disabled)::after {
+  opacity: 1;
+  transform: translateX(0);
+}
+
 .button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
   gap: 0.4rem;
 }
 
@@ -529,6 +801,51 @@ button:disabled {
   margin-top: 1.8rem;
 }
 
+.hero-notes {
+  display: grid;
+  gap: 0.7rem;
+  margin-top: 1.25rem;
+}
+
+.hero-notes-label {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.68rem;
+  color: rgba(31, 26, 23, 0.48);
+}
+
+.hero-notes-row,
+.realm-card-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.hero-notes-row span,
+.realm-card-notes span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.38rem;
+  padding: 0.38rem 0.72rem;
+  border-radius: 999px;
+  background: rgba(255, 252, 246, 0.74);
+  border: 1px solid rgba(31, 26, 23, 0.08);
+  font-size: 0.66rem;
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  color: rgba(31, 26, 23, 0.54);
+}
+
+.hero-notes-row span::before,
+.realm-card-notes span::before {
+  content: "";
+  width: 0.34rem;
+  height: 0.34rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(244, 213, 82, 0.98), rgba(244, 196, 136, 0.88));
+}
+
 .eyebrow,
 .realm-card-kicker,
 .panel-kicker,
@@ -554,8 +871,23 @@ button:disabled {
 
 .still-life-sun,
 .fruit,
-.petal {
+.petal,
+.leaf,
+.blossom,
+.seed,
+.branch,
+.still-life-table,
+.citrus-slice {
   position: absolute;
+}
+
+.still-life-sun,
+.fruit,
+.petal,
+.seed,
+.blossom,
+.still-life-table,
+.citrus-slice {
   border-radius: 999px;
 }
 
@@ -565,6 +897,69 @@ button:disabled {
   top: -1.5rem;
   right: -1.5rem;
   background: radial-gradient(circle, rgba(244, 213, 82, 0.96), rgba(244, 196, 136, 0.2));
+  animation: still-life-breathe 6.2s ease-in-out infinite;
+}
+
+.still-life-table {
+  left: -10%;
+  right: -10%;
+  bottom: -5.5rem;
+  height: 12rem;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(214, 191, 157, 0.18), transparent 60%),
+    linear-gradient(180deg, rgba(240, 229, 213, 0.62), rgba(226, 209, 188, 0.2));
+  filter: blur(1.4px);
+}
+
+.branch {
+  height: 0.28rem;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(124, 97, 70, 0.92), rgba(167, 141, 109, 0.82));
+}
+
+.branch-main {
+  width: 12rem;
+  right: 18%;
+  top: 8.2rem;
+  transform: rotate(24deg);
+}
+
+.leaf {
+  border-radius: 100% 0 100% 0;
+  background: linear-gradient(135deg, rgba(150, 181, 113, 0.95), rgba(104, 133, 82, 0.96));
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  animation: still-life-sway 5.2s ease-in-out infinite;
+}
+
+.leaf::after {
+  content: "";
+  position: absolute;
+  left: 48%;
+  top: 14%;
+  width: 1px;
+  height: 70%;
+  transform: rotate(34deg);
+  background: rgba(242, 250, 233, 0.64);
+}
+
+.leaf-one {
+  --sway-start: -16deg;
+  --sway-end: -10deg;
+  width: 4.4rem;
+  height: 2.15rem;
+  right: 20%;
+  top: 6.5rem;
+  transform: rotate(-16deg);
+}
+
+.leaf-two {
+  --sway-start: 26deg;
+  --sway-end: 32deg;
+  width: 3.6rem;
+  height: 1.85rem;
+  right: 14.5%;
+  top: 9.6rem;
+  transform: rotate(26deg);
 }
 
 .fruit-orange {
@@ -584,6 +979,54 @@ button:disabled {
   background: radial-gradient(circle at 30% 30%, #fff2b6, #e9cf4c 68%, #c3ab26 100%);
 }
 
+.citrus-slice {
+  width: 6.5rem;
+  height: 6.5rem;
+  left: 56%;
+  bottom: 5.5rem;
+  background:
+    radial-gradient(circle at center, rgba(255, 251, 245, 0.98) 0 14%, transparent 15%),
+    conic-gradient(
+      from -10deg,
+      rgba(248, 214, 102, 0.88) 0 11%,
+      rgba(255, 252, 243, 0.96) 11% 13%,
+      rgba(248, 214, 102, 0.88) 13% 24%,
+      rgba(255, 252, 243, 0.96) 24% 26%,
+      rgba(248, 214, 102, 0.88) 26% 37%,
+      rgba(255, 252, 243, 0.96) 37% 39%,
+      rgba(248, 214, 102, 0.88) 39% 50%,
+      rgba(255, 252, 243, 0.96) 50% 52%,
+      rgba(248, 214, 102, 0.88) 52% 63%,
+      rgba(255, 252, 243, 0.96) 63% 65%,
+      rgba(248, 214, 102, 0.88) 65% 76%,
+      rgba(255, 252, 243, 0.96) 76% 78%,
+      rgba(248, 214, 102, 0.88) 78% 89%,
+      rgba(255, 252, 243, 0.96) 89% 91%,
+      rgba(248, 214, 102, 0.88) 91% 100%
+    );
+  border: 0.55rem solid rgba(255, 250, 241, 0.94);
+  box-shadow: 0 18px 40px rgba(126, 90, 50, 0.14);
+  animation: still-life-float 4.8s ease-in-out infinite;
+}
+
+.citrus-slice::before {
+  content: "";
+  position: absolute;
+  inset: 0.55rem;
+  border-radius: 999px;
+  border: 0.18rem solid rgba(255, 249, 238, 0.74);
+}
+
+.citrus-slice::after {
+  content: "";
+  position: absolute;
+  inset: auto 18% -0.75rem;
+  height: 1rem;
+  border-radius: 999px;
+  background: rgba(175, 136, 83, 0.16);
+  filter: blur(12px);
+}
+
 .petal-one {
   width: 10rem;
   height: 10rem;
@@ -598,6 +1041,87 @@ button:disabled {
   left: 18%;
   top: 30%;
   background: rgba(157, 178, 199, 0.32);
+}
+
+.blossom-cluster,
+.seed-row {
+  position: absolute;
+}
+
+.blossom-cluster {
+  width: 6.8rem;
+  height: 4.8rem;
+  left: 49%;
+  top: 18%;
+}
+
+.blossom {
+  background: rgba(255, 252, 247, 0.96);
+  box-shadow: 0 0 0 0.75rem rgba(255, 245, 238, 0.36);
+  animation: still-life-float 5.4s ease-in-out infinite;
+}
+
+.blossom::after {
+  content: "";
+  position: absolute;
+  inset: 36%;
+  border-radius: 999px;
+  background: rgba(244, 213, 82, 0.94);
+}
+
+.blossom-one {
+  width: 1.85rem;
+  height: 1.85rem;
+  left: 0;
+  top: 1rem;
+  animation-delay: 120ms;
+}
+
+.blossom-two {
+  width: 2.2rem;
+  height: 2.2rem;
+  left: 1.7rem;
+  top: 0;
+  animation-delay: 280ms;
+}
+
+.blossom-three {
+  width: 1.7rem;
+  height: 1.7rem;
+  left: 3.8rem;
+  top: 1.4rem;
+  animation-delay: 420ms;
+}
+
+.seed-row {
+  left: 67%;
+  bottom: 4.1rem;
+  width: 3rem;
+  height: 1.4rem;
+}
+
+.seed {
+  width: 0.52rem;
+  height: 0.22rem;
+  background: rgba(188, 152, 99, 0.54);
+  transform: rotate(22deg);
+}
+
+.seed-one {
+  left: 0.3rem;
+  top: 0.6rem;
+}
+
+.seed-two {
+  left: 1.1rem;
+  top: 0.2rem;
+  transform: rotate(-16deg);
+}
+
+.seed-three {
+  left: 1.9rem;
+  top: 0.8rem;
+  transform: rotate(34deg);
 }
 
 .note-card {
@@ -617,6 +1141,10 @@ button:disabled {
 .note-card span:first-child {
   font-family: "Cormorant Garamond", serif;
   font-size: 1.55rem;
+}
+
+.realm-card-notes {
+  margin-top: 1rem;
 }
 
 .realm-grid-section,
@@ -740,6 +1268,144 @@ button:disabled {
   align-self: start;
   aspect-ratio: var(--asset-ratio, 0.92);
   background: rgba(255, 250, 242, 0.88);
+}
+
+.room-whisper {
+  --whisper-accent: rgba(244, 213, 82, 0.6);
+  --whisper-secondary: rgba(239, 182, 178, 0.42);
+  display: grid;
+  gap: 0.8rem;
+  margin-top: 0.45rem;
+  padding: 1rem 1.05rem;
+  border-radius: 1.45rem;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 247, 0.9), rgba(248, 240, 229, 0.82)),
+    radial-gradient(circle at top right, var(--whisper-secondary), transparent 42%);
+  border: 1px solid rgba(31, 26, 23, 0.08);
+  box-shadow: 0 18px 46px rgba(72, 48, 28, 0.06);
+}
+
+.room-whisper-topline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+}
+
+.room-whisper-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.64rem;
+  color: rgba(31, 26, 23, 0.46);
+}
+
+.room-whisper-glyph {
+  position: relative;
+  width: 3.1rem;
+  height: 1rem;
+}
+
+.room-whisper-glyph span {
+  position: absolute;
+  top: 50%;
+  border-radius: 999px;
+  background: var(--whisper-accent);
+  transform: translateY(-50%);
+  box-shadow: 0 0 0 0.18rem rgba(255, 255, 255, 0.5);
+}
+
+.room-whisper-glyph span:nth-child(1) {
+  left: 0;
+  width: 0.42rem;
+  height: 0.42rem;
+}
+
+.room-whisper-glyph span:nth-child(2) {
+  left: 0.92rem;
+  width: 0.65rem;
+  height: 0.65rem;
+  background: var(--whisper-secondary);
+}
+
+.room-whisper-glyph span:nth-child(3) {
+  right: 0;
+  width: 0.52rem;
+  height: 0.52rem;
+}
+
+.room-whisper-title {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.35rem, 2.3vw, 1.85rem);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+}
+
+.room-whisper-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin: 0;
+}
+
+.room-whisper-list div {
+  display: grid;
+  gap: 0.22rem;
+}
+
+.room-whisper-list dt {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.62rem;
+  color: rgba(31, 26, 23, 0.42);
+}
+
+.room-whisper-list dd {
+  margin: 0;
+  color: rgba(31, 26, 23, 0.82);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+
+.room-whisper-studio {
+  --whisper-accent: rgba(196, 163, 118, 0.64);
+  --whisper-secondary: rgba(228, 201, 175, 0.4);
+}
+
+.room-whisper-orchard {
+  --whisper-accent: rgba(244, 213, 82, 0.82);
+  --whisper-secondary: rgba(239, 182, 178, 0.48);
+}
+
+.room-whisper-mirror {
+  --whisper-accent: rgba(212, 203, 220, 0.82);
+  --whisper-secondary: rgba(208, 219, 232, 0.44);
+}
+
+.room-whisper-practice {
+  --whisper-accent: rgba(157, 178, 199, 0.76);
+  --whisper-secondary: rgba(174, 201, 117, 0.28);
+}
+
+.room-whisper-play {
+  --whisper-accent: rgba(244, 196, 136, 0.8);
+  --whisper-secondary: rgba(239, 182, 178, 0.46);
+}
+
+.room-whisper.is-compact {
+  gap: 0.68rem;
+  padding: 0.95rem;
+}
+
+.room-whisper.is-compact .room-whisper-title {
+  font-size: 1.2rem;
+}
+
+.room-whisper.is-compact .room-whisper-list {
+  grid-template-columns: 1fr;
+  gap: 0.62rem;
 }
 
 .work-hero {
@@ -910,90 +1576,144 @@ button:disabled {
   gap: 1rem;
 }
 
-.realm-mosaic {
-  column-count: 4;
-  column-gap: 0.9rem;
+.realm-gallery {
+  column-count: 2;
+  column-gap: 1.35rem;
   margin-top: 0.75rem;
 }
 
-.realm-mosaic-card {
-  display: inline-grid;
+.gallery-piece {
+  display: block;
   width: 100%;
   break-inside: avoid;
-  gap: 0.72rem;
-  margin: 0 0 1.05rem;
-  padding: 0;
-  background: transparent;
-  border: none;
-  box-shadow: none;
+  margin: 0 0 1.35rem;
   transform: translateY(0);
-  transition: transform 220ms ease, opacity 220ms ease;
+  transition: transform 220ms ease;
 }
 
-.realm-mosaic-card-video {
-  gap: 0.78rem;
+.gallery-piece:hover {
+  transform: translateY(-0.16rem);
 }
 
-.realm-mosaic-card:hover {
-  transform: translateY(-0.2rem);
-}
-
-.realm-mosaic-media {
+.gallery-piece-media {
   position: relative;
   display: block;
+  margin: 0;
   overflow: hidden;
-  border-radius: 0.75rem;
+  border-radius: 1.55rem;
   aspect-ratio: var(--asset-ratio);
-  background: rgba(252, 247, 239, 0.8);
+  background:
+    linear-gradient(180deg, rgba(255, 253, 249, 0.96), rgba(244, 236, 225, 0.92)),
+    radial-gradient(circle at top right, rgba(244, 213, 82, 0.12), transparent 36%);
+  border: 1px solid rgba(31, 26, 23, 0.07);
+  box-shadow: var(--shadow);
 }
 
-.realm-mosaic-card-video .realm-mosaic-media {
-  background: rgba(248, 243, 235, 0.94);
+.gallery-piece-portrait .gallery-piece-media {
+  border-radius: 1.7rem;
 }
 
-.realm-mosaic-media img,
-.realm-mosaic-media video {
+.gallery-piece-landscape .gallery-piece-media {
+  border-radius: 1.35rem;
+}
+
+.gallery-piece-media img,
+.gallery-piece-media video {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: transform 520ms ease, filter 320ms ease;
 }
 
-.realm-mosaic-badge {
+.gallery-piece-overlay {
   position: absolute;
-  left: 0.75rem;
-  bottom: 0.75rem;
-  border-radius: 999px;
-  padding: 0.32rem 0.62rem;
-  background: rgba(20, 17, 15, 0.64);
-  color: rgba(255, 250, 242, 0.9);
-  text-transform: uppercase;
-  letter-spacing: 0.18em;
-  font-size: 0.58rem;
-  backdrop-filter: blur(10px);
+  inset: 0;
+  display: flex;
+  align-items: flex-end;
+  padding: 1rem;
+  background: linear-gradient(180deg, rgba(15, 12, 10, 0) 34%, rgba(15, 12, 10, 0.12) 100%);
+  opacity: 0;
+  transition: opacity 240ms ease;
+  pointer-events: none;
 }
 
-.realm-mosaic-copy {
+.gallery-piece-card {
   display: grid;
-  gap: 0.32rem;
-  align-content: start;
-  padding: 0 0.2rem;
+  gap: 0.35rem;
+  max-width: min(24rem, 100%);
+  padding: 0.9rem 0.95rem 0.85rem;
+  border-radius: 1.15rem;
+  background: rgba(28, 22, 18, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(20px) saturate(120%);
+  box-shadow: 0 14px 34px rgba(22, 18, 16, 0.12);
+  transform: translateY(0.75rem);
+  transition: transform 240ms ease, background-color 240ms ease, border-color 240ms ease;
 }
 
-.realm-mosaic-kicker {
+.gallery-piece-kicker {
   margin: 0;
   text-transform: uppercase;
   letter-spacing: 0.18em;
-  font-size: 0.63rem;
-  color: rgba(31, 26, 23, 0.42);
+  font-size: 0.62rem;
+  color: rgba(255, 249, 243, 0.74);
 }
 
-.realm-mosaic-copy h3 {
+.gallery-piece-card h3 {
   margin: 0;
   font-family: "Cormorant Garamond", serif;
-  font-size: clamp(1.35rem, 2vw, 2rem);
+  font-size: clamp(1.65rem, 2.2vw, 2.45rem);
   font-weight: 600;
-  line-height: 0.98;
+  line-height: 0.96;
   letter-spacing: -0.03em;
+  color: rgba(255, 251, 246, 0.97);
+}
+
+.gallery-piece:hover .gallery-piece-overlay,
+.gallery-piece:focus-visible .gallery-piece-overlay,
+.gallery-piece:focus-within .gallery-piece-overlay {
+  opacity: 1;
+}
+
+.gallery-piece:hover .gallery-piece-card,
+.gallery-piece:focus-visible .gallery-piece-card,
+.gallery-piece:focus-within .gallery-piece-card {
+  transform: translateY(0);
+  background: rgba(28, 22, 18, 0.46);
+  border-color: rgba(255, 255, 255, 0.24);
+}
+
+.gallery-piece:hover .gallery-piece-media img,
+.gallery-piece:hover .gallery-piece-media video,
+.gallery-piece:focus-visible .gallery-piece-media img,
+.gallery-piece:focus-visible .gallery-piece-media video,
+.gallery-piece:focus-within .gallery-piece-media img,
+.gallery-piece:focus-within .gallery-piece-media video {
+  transform: scale(1.03);
+  filter: saturate(1.04);
+}
+
+.gallery-piece:focus-visible {
+  outline: none;
+}
+
+.gallery-piece:focus-visible .gallery-piece-media,
+.gallery-piece:focus-within .gallery-piece-media {
+  box-shadow:
+    0 0 0 3px rgba(244, 213, 82, 0.2),
+    var(--shadow);
+}
+
+.gallery-piece-video .gallery-piece-overlay {
+  background: linear-gradient(180deg, rgba(15, 12, 10, 0) 28%, rgba(15, 12, 10, 0.18) 100%);
+}
+
+.gallery-piece-landscape .gallery-piece-card {
+  max-width: 18rem;
+}
+
+.gallery-piece-square .gallery-piece-card {
+  max-width: 19rem;
 }
 
 .work-panel {
@@ -1462,8 +2182,51 @@ button:disabled {
     aspect-ratio: auto;
   }
 
+  .branch-main {
+    width: 9.8rem;
+    right: 16%;
+    top: 6.9rem;
+  }
+
+  .leaf-one {
+    width: 3.7rem;
+    height: 1.8rem;
+    right: 18%;
+    top: 5.6rem;
+  }
+
+  .leaf-two {
+    width: 3rem;
+    height: 1.55rem;
+    right: 13%;
+    top: 8.4rem;
+  }
+
+  .citrus-slice {
+    width: 5.3rem;
+    height: 5.3rem;
+    left: 52%;
+    bottom: 4.2rem;
+  }
+
+  .blossom-cluster {
+    left: 47%;
+    top: 16%;
+    transform: scale(0.88);
+    transform-origin: top left;
+  }
+
+  .seed-row {
+    left: 64%;
+    bottom: 3.2rem;
+  }
+
   .realm-hero-figure {
     min-height: 0;
+  }
+
+  .room-whisper-list {
+    grid-template-columns: 1fr;
   }
 
   .realm-grid,
@@ -1472,7 +2235,7 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
-  .realm-mosaic {
+  .realm-gallery {
     column-count: 2;
     column-gap: 0.7rem;
   }
@@ -1492,6 +2255,10 @@ button:disabled {
 
   .citrus-interlude-copy h2 {
     font-size: clamp(2.7rem, 11vw, 4.4rem);
+  }
+
+  .citrus-interlude-notes {
+    gap: 0.42rem;
   }
 
   .work-meta {
@@ -1548,8 +2315,15 @@ button:disabled {
 }
 
 @media (max-width: 620px) {
-  .realm-mosaic {
+  .realm-gallery {
     column-count: 1;
+  }
+
+  .hero-notes-row span,
+  .realm-card-notes span,
+  .citrus-interlude-note {
+    letter-spacing: 0.14em;
+    font-size: 0.58rem;
   }
 
   .citrus-interlude-stage {
@@ -1558,6 +2332,92 @@ button:disabled {
 
   .citrus-interlude-copy p:last-child {
     font-size: 0.95rem;
+  }
+
+  .citrus-interlude-progress {
+    width: min(15rem, 82vw);
+  }
+
+  .room-whisper {
+    padding: 0.9rem;
+  }
+
+  .room-whisper-title {
+    font-size: 1.15rem;
+  }
+
+  .gallery-piece {
+    margin-bottom: 1rem;
+  }
+
+  .gallery-piece-overlay {
+    padding: 0.85rem;
+  }
+
+  .gallery-piece-card {
+    padding: 0.78rem 0.82rem 0.74rem;
+  }
+
+  .gallery-piece-card h3 {
+    font-size: 1.6rem;
+  }
+
+  .note-card {
+    left: 7%;
+    top: 3.4rem;
+    padding: 0.85rem 1rem;
+  }
+
+  .note-card span:first-child {
+    font-size: 1.32rem;
+  }
+
+  .branch-main {
+    width: 8rem;
+    right: 14%;
+    top: 5.8rem;
+  }
+
+  .leaf-one {
+    width: 3rem;
+    height: 1.5rem;
+    top: 4.8rem;
+  }
+
+  .leaf-two {
+    width: 2.5rem;
+    height: 1.3rem;
+    top: 7.2rem;
+  }
+
+  .citrus-slice {
+    width: 4.6rem;
+    height: 4.6rem;
+    left: 50%;
+    bottom: 3.5rem;
+  }
+
+  .blossom-cluster {
+    left: 44%;
+    top: 14%;
+    transform: scale(0.76);
+  }
+
+  .seed-row {
+    left: 61%;
+    bottom: 2.6rem;
+  }
+}
+
+@media (hover: none) {
+  .gallery-piece-overlay {
+    opacity: 1;
+  }
+
+  .gallery-piece-card {
+    transform: translateY(0);
+    background: rgba(28, 22, 18, 0.46);
+    border-color: rgba(255, 255, 255, 0.24);
   }
 }
 
@@ -1572,11 +2432,23 @@ button:disabled {
   }
 
   .site-main,
-  .realm-mosaic-card,
+  .gallery-piece,
+  .gallery-piece-media img,
+  .gallery-piece-media video,
+  .gallery-piece-overlay,
+  .gallery-piece-card,
   .citrus-interlude,
+  .citrus-interlude-aura,
   .citrus-segment,
   .citrus-crumb,
-  .citrus-interlude-cut-line {
+  .citrus-interlude-cut-line,
+  .citrus-orbit-glyph,
+  .citrus-scent-mote,
+  .citrus-interlude-progress-beam,
+  .still-life-sun,
+  .leaf,
+  .citrus-slice,
+  .blossom {
     animation: none;
     transition: none;
   }
@@ -1591,6 +2463,17 @@ button:disabled {
 
   .citrus-crumb {
     display: none;
+  }
+
+  .citrus-orbit-glyph,
+  .citrus-scent-mote {
+    opacity: 0.72;
+  }
+
+  .citrus-interlude-progress-beam {
+    inset: 0 auto 0 0;
+    width: 58%;
+    opacity: 0.84;
   }
 }
 

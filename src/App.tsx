@@ -12,7 +12,7 @@ import {
 } from "solid-js";
 import type { Accessor, JSX, ParentProps } from "solid-js";
 import AdminPage from "./admin/AdminPage";
-import type { CaseStudyBlock, MediaItem, RichTextSpan } from "./data/schema";
+import type { CaseStudyBlock, MediaItem, RealmSlug, RichTextSpan, Work } from "./data/schema";
 import {
   asset,
   getRealmBySlug,
@@ -59,6 +59,75 @@ interface InterludeState {
   revealMs: number;
 }
 
+type CitrusGlyphKind = "leaf" | "petal" | "blossom";
+
+interface RealmCue {
+  label: string;
+  value: string;
+}
+
+interface RoomWhisper {
+  eyebrow: string;
+  title: string;
+  cues: RealmCue[];
+}
+
+const REALM_SENSORY_NOTES: Record<RealmSlug, string[]> = {
+  studio: ["graphite dust", "paper grain", "quiet pigment"],
+  orchard: ["zest release", "petal hush", "warm table light"],
+  mirror: ["soft glow", "private gaze", "silk shadow"],
+  practice: ["clear rhythm", "warm systems", "measured light"],
+  play: ["spark drift", "elastic motion", "bright collision"],
+};
+
+const ROOM_WHISPERS: Record<RealmSlug, RoomWhisper> = {
+  studio: {
+    eyebrow: "Room cues",
+    title: "Marks arrive before explanation.",
+    cues: [
+      { label: "Surface", value: "paper grain + chalk dust" },
+      { label: "Light", value: "north-window calm" },
+      { label: "Gesture", value: "sketches staying soft-edged" },
+    ],
+  },
+  orchard: {
+    eyebrow: "Gathering notes",
+    title: "Zest, petals, and window light are doing the welcoming.",
+    cues: [
+      { label: "Scent", value: "citrus peel + soft blossom" },
+      { label: "Light", value: "late-afternoon gold" },
+      { label: "Gesture", value: "abundance kept tender" },
+    ],
+  },
+  mirror: {
+    eyebrow: "Room cues",
+    title: "The air stays luminous and inward-facing.",
+    cues: [
+      { label: "Surface", value: "powdered light + satin hush" },
+      { label: "Light", value: "silver dusk glow" },
+      { label: "Gesture", value: "selfhood, held gently" },
+    ],
+  },
+  practice: {
+    eyebrow: "Room cues",
+    title: "Structure stays warm while everything aligns.",
+    cues: [
+      { label: "Surface", value: "grid lines with softness" },
+      { label: "Light", value: "clear morning focus" },
+      { label: "Gesture", value: "systems made humane" },
+    ],
+  },
+  play: {
+    eyebrow: "Room cues",
+    title: "Motion behaves like a bright little dare.",
+    cues: [
+      { label: "Surface", value: "collage sparks + blur" },
+      { label: "Light", value: "electric shimmer" },
+      { label: "Gesture", value: "curiosity, left loose" },
+    ],
+  },
+};
+
 const PRELOAD_TIMEOUT_MS = 6500;
 const RouteRevealContext = createContext<Accessor<boolean>>();
 
@@ -102,6 +171,205 @@ function getTransitionProfile(kind: ManagedRouteKind, source: TransitionSource, 
   return kind === "realm"
     ? { coverMs: 320, minMs: 1760, revealMs: 620 }
     : { coverMs: 190, minMs: 980, revealMs: 420 };
+}
+
+function getRealmSensoryNotes(realmSlug: RealmSlug): string[] {
+  return REALM_SENSORY_NOTES[realmSlug];
+}
+
+function buildInterludeNotes(state: InterludeState): string[] {
+  const baseNotes =
+    state.variant === "orange"
+      ? ["zest release", "amber glow"]
+      : ["pith light", "petal hush"];
+
+  return [...baseNotes, state.kind === "realm" ? "threshold opening" : "piece surfacing"];
+}
+
+function buildCitrusOrbitGlyphs(variant: CitrusVariant): Array<{
+  kind: CitrusGlyphKind;
+  style: JSX.CSSProperties;
+}> {
+  const glyphs =
+    variant === "orange"
+      ? [
+          {
+            kind: "leaf" as const,
+            left: "17%",
+            top: "20%",
+            size: "1.95rem",
+            delay: "140ms",
+            rotation: "-22deg",
+            driftX: "0.3rem",
+            driftY: "-0.8rem",
+          },
+          {
+            kind: "petal" as const,
+            left: "84%",
+            top: "25%",
+            size: "1.3rem",
+            delay: "300ms",
+            rotation: "24deg",
+            driftX: "-0.25rem",
+            driftY: "-0.55rem",
+          },
+          {
+            kind: "blossom" as const,
+            left: "78%",
+            top: "74%",
+            size: "1.05rem",
+            delay: "200ms",
+            rotation: "0deg",
+            driftX: "-0.2rem",
+            driftY: "0.45rem",
+          },
+        ]
+      : [
+          {
+            kind: "leaf" as const,
+            left: "21%",
+            top: "24%",
+            size: "1.75rem",
+            delay: "120ms",
+            rotation: "-18deg",
+            driftX: "0.24rem",
+            driftY: "-0.68rem",
+          },
+          {
+            kind: "petal" as const,
+            left: "81%",
+            top: "19%",
+            size: "1.15rem",
+            delay: "280ms",
+            rotation: "18deg",
+            driftX: "-0.18rem",
+            driftY: "-0.48rem",
+          },
+          {
+            kind: "blossom" as const,
+            left: "73%",
+            top: "71%",
+            size: "0.95rem",
+            delay: "240ms",
+            rotation: "0deg",
+            driftX: "-0.16rem",
+            driftY: "0.38rem",
+          },
+        ];
+
+  return glyphs.map((glyph) => ({
+    kind: glyph.kind,
+    style: {
+      "--glyph-left": glyph.left,
+      "--glyph-top": glyph.top,
+      "--glyph-size": glyph.size,
+      "--glyph-delay": glyph.delay,
+      "--glyph-rotation": glyph.rotation,
+      "--glyph-drift-x": glyph.driftX,
+      "--glyph-drift-y": glyph.driftY,
+    },
+  }));
+}
+
+function buildCitrusScentMotes(variant: CitrusVariant): JSX.CSSProperties[] {
+  const motes =
+    variant === "orange"
+      ? [
+          { left: "28%", bottom: "26%", size: "0.48rem", delay: "180ms", drift: "-1.2rem" },
+          { left: "38%", bottom: "18%", size: "0.34rem", delay: "320ms", drift: "-1rem" },
+          { left: "64%", bottom: "22%", size: "0.42rem", delay: "240ms", drift: "-1.1rem" },
+          { left: "74%", bottom: "30%", size: "0.28rem", delay: "400ms", drift: "-0.86rem" },
+        ]
+      : [
+          { left: "31%", bottom: "24%", size: "0.38rem", delay: "200ms", drift: "-0.95rem" },
+          { left: "43%", bottom: "18%", size: "0.28rem", delay: "340ms", drift: "-0.76rem" },
+          { left: "61%", bottom: "21%", size: "0.34rem", delay: "260ms", drift: "-0.9rem" },
+          { left: "70%", bottom: "29%", size: "0.24rem", delay: "420ms", drift: "-0.66rem" },
+        ];
+
+  return motes.map((mote) => ({
+    "--mote-left": mote.left,
+    "--mote-bottom": mote.bottom,
+    "--mote-size": mote.size,
+    "--mote-delay": mote.delay,
+    "--mote-drift-y": mote.drift,
+  }));
+}
+
+function RoomWhisperCard(props: {
+  realmSlug: RealmSlug;
+  compact?: boolean;
+  eyebrow?: string;
+}): JSX.Element {
+  const whisper = () => ROOM_WHISPERS[props.realmSlug];
+
+  return (
+    <aside class={`room-whisper room-whisper-${props.realmSlug} ${props.compact ? "is-compact" : ""}`.trim()}>
+      <div class="room-whisper-topline">
+        <p class="room-whisper-eyebrow">{props.eyebrow ?? whisper().eyebrow}</p>
+        <div class="room-whisper-glyph" aria-hidden="true">
+          <span />
+          <span />
+          <span />
+        </div>
+      </div>
+      <p class="room-whisper-title">{whisper().title}</p>
+      <dl class="room-whisper-list">
+        <For each={whisper().cues}>
+          {(cue) => (
+            <div>
+              <dt>{cue.label}</dt>
+              <dd>{cue.value}</dd>
+            </div>
+          )}
+        </For>
+      </dl>
+    </aside>
+  );
+}
+
+function getGalleryPieceShape(media: MediaItem): "portrait" | "landscape" | "square" {
+  const ratio = media.width / media.height;
+
+  if (ratio > 1.15) return "landscape";
+  if (ratio < 0.84) return "portrait";
+  return "square";
+}
+
+function RealmGallery(props: { works: Work[] }): JSX.Element {
+  return (
+    <section class="realm-gallery" aria-label="Realm works gallery">
+      <For each={props.works}>
+        {(work, index) => {
+          const leadMedia = work.media[0]!;
+          const pieceShape = getGalleryPieceShape(leadMedia);
+
+          return (
+            <A
+              href={`/work/${work.slug}`}
+              class={`gallery-piece gallery-piece-${pieceShape} ${leadMedia.kind === "video" ? "gallery-piece-video" : "gallery-piece-image"}`}
+            >
+              <figure class="gallery-piece-media" style={createMediaAspectStyle(leadMedia)}>
+                {renderMediaAsset(leadMedia, {
+                  autoplay: leadMedia.kind === "video",
+                  preload: leadMedia.kind === "video" ? "metadata" : undefined,
+                  loading: index() < 4 ? "eager" : "lazy",
+                })}
+                <div class="gallery-piece-overlay">
+                  <div class="gallery-piece-card">
+                    <p class="gallery-piece-kicker">
+                      {work.year} / {work.medium}
+                    </p>
+                    <h3>{work.title}</h3>
+                  </div>
+                </div>
+              </figure>
+            </A>
+          );
+        }}
+      </For>
+    </section>
+  );
 }
 
 function RootShell(props: ParentProps) {
@@ -488,6 +756,9 @@ function renderMediaAsset(
 function CitrusInterlude(props: { state: InterludeState }): JSX.Element {
   const segments = () => buildCitrusSegments(props.state.variant === "orange" ? 8 : 6, props.state.variant);
   const crumbs = () => buildCitrusCrumbs(props.state.variant);
+  const notes = () => buildInterludeNotes(props.state);
+  const orbitGlyphs = () => buildCitrusOrbitGlyphs(props.state.variant);
+  const scentMotes = () => buildCitrusScentMotes(props.state.variant);
 
   return (
     <div
@@ -503,6 +774,18 @@ function CitrusInterlude(props: { state: InterludeState }): JSX.Element {
 
       <div class="citrus-interlude-stage">
         <div class="citrus-interlude-fruit-shell" aria-hidden="true">
+          <div class="citrus-interlude-aura citrus-interlude-aura-outer" />
+          <div class="citrus-interlude-aura citrus-interlude-aura-inner" />
+          <div class="citrus-interlude-scent">
+            <For each={scentMotes()}>
+              {(mote) => <span class="citrus-scent-mote" style={mote} />}
+            </For>
+          </div>
+          <div class="citrus-interlude-orbit">
+            <For each={orbitGlyphs()}>
+              {(glyph) => <span class={`citrus-orbit-glyph citrus-orbit-glyph-${glyph.kind}`} style={glyph.style} />}
+            </For>
+          </div>
           <div class="citrus-interlude-cut-line" />
           <svg
             class="citrus-interlude-fruit"
@@ -535,6 +818,14 @@ function CitrusInterlude(props: { state: InterludeState }): JSX.Element {
           <p class="citrus-interlude-eyebrow">{props.state.eyebrow}</p>
           <h2>{props.state.title}</h2>
           <p>{props.state.description}</p>
+          <div class="citrus-interlude-notes" aria-hidden="true">
+            <For each={notes()}>
+              {(note) => <span class="citrus-interlude-note">{note}</span>}
+            </For>
+          </div>
+          <div class="citrus-interlude-progress" aria-hidden="true">
+            <span class="citrus-interlude-progress-beam" />
+          </div>
         </div>
       </div>
     </div>
@@ -645,14 +936,37 @@ function HomePage() {
               Follow the citrus trail
             </A>
           </div>
+          <div class="hero-notes">
+            <p class="hero-notes-label">Harvest notes</p>
+            <div class="hero-notes-row">
+              <For each={getRealmSensoryNotes("orchard")}>
+                {(note) => <span>{note}</span>}
+              </For>
+            </div>
+          </div>
         </div>
 
         <div class="still-life" aria-hidden="true">
           <div class="still-life-sun" />
+          <div class="still-life-table" />
+          <div class="branch branch-main" />
+          <div class="leaf leaf-one" />
+          <div class="leaf leaf-two" />
           <div class="fruit fruit-orange" />
           <div class="fruit fruit-lemon" />
+          <div class="citrus-slice" />
           <div class="petal petal-one" />
           <div class="petal petal-two" />
+          <div class="blossom-cluster">
+            <span class="blossom blossom-one" />
+            <span class="blossom blossom-two" />
+            <span class="blossom blossom-three" />
+          </div>
+          <div class="seed-row">
+            <span class="seed seed-one" />
+            <span class="seed seed-two" />
+            <span class="seed seed-three" />
+          </div>
           <div class="note-card">
             <span>touch-first</span>
             <span>tender + sunlit</span>
@@ -676,6 +990,11 @@ function HomePage() {
                   <p class="realm-card-kicker">{realm.subtitle}</p>
                   <h3>{realm.name}</h3>
                   <p>{realm.intro}</p>
+                  <div class="realm-card-notes">
+                    <For each={getRealmSensoryNotes(realm.slug).slice(0, 2)}>
+                      {(note) => <span>{note}</span>}
+                    </For>
+                  </div>
                 </div>
               </A>
             )}
@@ -718,7 +1037,6 @@ function RealmPage() {
   const realmSlug = () => params.realmSlug ?? "";
   const realm = () => getRealmBySlug(realmSlug());
   const works = () => getWorksForRealm(realmSlug());
-  const isPracticeRealm = () => realmSlug() === "practice";
 
   return (
     <Show when={realm()} fallback={<NotFoundPage />}>
@@ -729,6 +1047,7 @@ function RealmPage() {
               <p class="eyebrow">{resolvedRealm().subtitle}</p>
               <h1>{resolvedRealm().name}</h1>
               <p>{resolvedRealm().intro}</p>
+              <RoomWhisperCard realmSlug={resolvedRealm().slug} />
             </div>
             <figure class="realm-hero-figure" style={createMediaAspectStyle(resolvedRealm().coverMedia)}>
               {renderMediaAsset(resolvedRealm().coverMedia, { loading: "eager" })}
@@ -740,66 +1059,7 @@ function RealmPage() {
             <h2>{works().length} pieces gathered here</h2>
           </section>
 
-          <Show
-            when={isPracticeRealm()}
-            fallback={
-              <section class="realm-mosaic">
-                <For each={works()}>
-                  {(work) => {
-                    const leadMedia = work.media[0]!;
-
-                    return (
-                      <A
-                        href={`/work/${work.slug}`}
-                        class={`realm-mosaic-card ${leadMedia.kind === "video" ? "realm-mosaic-card-video" : ""}`}
-                      >
-                        <figure class="realm-mosaic-media" style={createMediaAspectStyle(leadMedia)}>
-                          {renderMediaAsset(leadMedia, {
-                            autoplay: false,
-                            preload: leadMedia.kind === "video" ? "none" : undefined,
-                            loading: "eager",
-                          })}
-                          <Show when={leadMedia.kind === "video"}>
-                            <span class="realm-mosaic-badge">Moving image</span>
-                          </Show>
-                        </figure>
-                        <div class="realm-mosaic-copy">
-                          <p class="realm-mosaic-kicker">
-                            {work.year} / {work.medium}
-                          </p>
-                          <h3>{work.title}</h3>
-                        </div>
-                      </A>
-                    );
-                  }}
-                </For>
-              </section>
-            }
-          >
-            <section class="work-stack">
-              <For each={works()}>
-                {(work) => (
-                  <A href={`/work/${work.slug}`} class="work-panel">
-                    <figure class="work-panel-media">
-                      {renderMediaAsset(work.media[0])}
-                    </figure>
-                    <div class="work-panel-copy">
-                      <p class="panel-kicker">
-                        {work.year} / {work.medium}
-                      </p>
-                      <h3>{work.title}</h3>
-                      <p>{work.summary}</p>
-                      <div class="tag-row">
-                        <For each={work.tags}>
-                          {(tag) => <span>{tag}</span>}
-                        </For>
-                      </div>
-                    </div>
-                  </A>
-                )}
-              </For>
-            </section>
-          </Show>
+          <RealmGallery works={works()} />
         </div>
       )}
     </Show>
@@ -1170,6 +1430,15 @@ function WorkPage() {
                       </dd>
                     </div>
                   </dl>
+                  <Show when={realm()}>
+                    {(resolvedRealm) => (
+                      <RoomWhisperCard
+                        realmSlug={resolvedRealm().slug}
+                        compact
+                        eyebrow="Room cues"
+                      />
+                    )}
+                  </Show>
                 </div>
               </div>
             </section>
