@@ -79,6 +79,76 @@
       "width": 720,
       "height": 1280,
       "poster": "archive/curated/play/2025-09-17_DOtgB4TjGkO_highlight_02-poster.jpg"
+    },
+    {
+      "id": "2bbce1a6ce7d",
+      "account": "kategonc",
+      "realm": "play",
+      "sourcePath": "archive/raw/kategonc/2018-01-10__rCBhDsAX_highlight/2020-09-10_CE9QSU3AxXb_highlight_38.mp4",
+      "sourceUrl": "https://www.instagram.com/stories/highlights/17922178600058903/",
+      "note": "",
+      "moods": [
+        "sunlit",
+        "dreamy"
+      ],
+      "colors": [
+        "citrus"
+      ],
+      "motifs": [
+        "flowers"
+      ],
+      "fileName": "2020-09-10_CE9QSU3AxXb_highlight_38.mp4",
+      "curatedPath": "archive/curated/play/2020-09-10_CE9QSU3AxXb_highlight_38.mp4",
+      "width": 640,
+      "height": 1136,
+      "poster": "archive/curated/play/2020-09-10_CE9QSU3AxXb_highlight_38-poster.jpg",
+      "createdAt": "2026-03-16T14:52:23.348Z"
+    },
+    {
+      "id": "cda3ca45d7f1",
+      "account": "kategonc",
+      "realm": "play",
+      "sourcePath": "archive/raw/kategonc/2018-01-10__rCBhDsAX_highlight/2020-09-06_CEzOtnrgmN0_highlight_36.mp4",
+      "sourceUrl": "https://www.instagram.com/stories/highlights/17922178600058903/",
+      "note": "",
+      "moods": [
+        "sunlit",
+        "cinematic"
+      ],
+      "colors": [
+        "rose"
+      ],
+      "motifs": [
+        "flowers"
+      ],
+      "fileName": "2020-09-06_CEzOtnrgmN0_highlight_36.mp4",
+      "curatedPath": "archive/curated/play/2020-09-06_CEzOtnrgmN0_highlight_36.mp4",
+      "width": 640,
+      "height": 1136,
+      "poster": "archive/curated/play/2020-09-06_CEzOtnrgmN0_highlight_36-poster.jpg",
+      "createdAt": "2026-03-16T14:56:18.632Z"
+    },
+    {
+      "id": "2e368834e2ee",
+      "account": "kategonc",
+      "realm": "play",
+      "sourcePath": "archive/raw/kategonc/2019-02-25_BuTsv8rnbbD_post/2019-02-25_BuTsv8rnbbD_post_01.jpg",
+      "sourceUrl": "https://www.instagram.com/p/BuTsv8rnbbD/",
+      "note": "",
+      "moods": [
+        "sunlit"
+      ],
+      "colors": [
+        "sky"
+      ],
+      "motifs": [
+        "street"
+      ],
+      "fileName": "2019-02-25_BuTsv8rnbbD_post_01.jpg",
+      "curatedPath": "archive/curated/play/2019-02-25_BuTsv8rnbbD_post_01.jpg",
+      "width": 1080,
+      "height": 1350,
+      "createdAt": "2026-03-16T15:06:58.039Z"
     }
   ]
 }

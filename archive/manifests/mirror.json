@@ -77,6 +77,58 @@
       "createdAt": "2026-03-09T07:42:10.858Z",
       "width": 1440,
       "height": 960
+    },
+    {
+      "id": "8eb21934355b",
+      "account": "kategonc",
+      "realm": "mirror",
+      "sourcePath": "archive/raw/kategonc/2021-01-12_CJ8YT-MD3Co_post/2021-01-12_CJ8YT-MD3Co_post_01.jpg",
+      "sourceUrl": "https://www.instagram.com/p/CJ8YT-MD3Co/",
+      "note": "",
+      "moods": [
+        "tender",
+        "cinematic",
+        "sunlit",
+        "intimate"
+      ],
+      "colors": [
+        "terracotta",
+        "amber",
+        "sky"
+      ],
+      "motifs": [
+        "street",
+        "portrait"
+      ],
+      "fileName": "2021-01-12_CJ8YT-MD3Co_post_01.jpg",
+      "curatedPath": "archive/curated/mirror/2021-01-12_CJ8YT-MD3Co_post_01.jpg",
+      "width": 1440,
+      "height": 960,
+      "createdAt": "2026-03-16T14:51:25.417Z"
+    },
+    {
+      "id": "1b36fa3d4878",
+      "account": "kategonc",
+      "realm": "mirror",
+      "sourcePath": "archive/raw/kategonc/2019-07-05_BziA2AZnW7j_post/2019-07-05_BziA1-UHyev_post_02.jpg",
+      "sourceUrl": "https://www.instagram.com/p/BziA2AZnW7j/",
+      "note": "",
+      "moods": [
+        "intimate"
+      ],
+      "colors": [
+        "cream",
+        "terracotta"
+      ],
+      "motifs": [
+        "portrait",
+        "room"
+      ],
+      "fileName": "2019-07-05_BziA1-UHyev_post_02.jpg",
+      "curatedPath": "archive/curated/mirror/2019-07-05_BziA1-UHyev_post_02.jpg",
+      "width": 1440,
+      "height": 1795,
+      "createdAt": "2026-03-16T15:04:37.152Z"
     }
   ]
 }
