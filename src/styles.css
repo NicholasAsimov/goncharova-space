@@ -655,6 +655,56 @@ button:disabled {
   }
 }
 
+@keyframes realm-cloud-drift {
+  0%,
+  100% {
+    transform: var(--cloud-base-transform, translateY(0)) translateY(0);
+  }
+
+  50% {
+    transform: var(--cloud-base-transform, translateY(0)) translateY(var(--cloud-offset, -0.55rem));
+  }
+}
+
+@keyframes kingdom-glow-breathe {
+  0%,
+  100% {
+    opacity: 0.46;
+    scale: 0.96;
+  }
+
+  50% {
+    opacity: 0.72;
+    scale: 1.08;
+  }
+}
+
+@keyframes kingdom-heart-breathe {
+  0%,
+  100% {
+    scale: 1;
+  }
+
+  50% {
+    scale: 1.02;
+  }
+}
+
+@keyframes realm-cloud-orbit {
+  0%,
+  100% {
+    transform: var(--cloud-scene-transform, translate3d(0, 0, 0)) translate3d(0, 0, 0) rotate(var(--cloud-tilt-start, -2deg)) scale(1);
+  }
+
+  35% {
+    transform: var(--cloud-scene-transform, translate3d(0, 0, 0)) translate3d(var(--cloud-orbit-x, 0.35rem), calc(var(--cloud-offset, -0.55rem) * 0.7), 0) rotate(var(--cloud-tilt-mid, 1deg)) scale(1.012);
+  }
+
+  68% {
+    transform: var(--cloud-scene-transform, translate3d(0, 0, 0)) translate3d(calc(var(--cloud-orbit-x, 0.35rem) * -0.85), calc(var(--cloud-offset, -0.55rem) * 1.1), 0) rotate(var(--cloud-tilt-end, 3deg)) scale(0.992);
+  }
+}
+
 .admin-header-label {
   font-size: 0.64rem;
   text-transform: uppercase;
@@ -844,6 +894,845 @@ button:disabled {
   height: 0.34rem;
   border-radius: 999px;
   background: linear-gradient(135deg, rgba(244, 213, 82, 0.98), rgba(244, 196, 136, 0.88));
+}
+
+.threshold-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 15rem;
+  gap: 1rem;
+  align-items: center;
+}
+
+.threshold-compass {
+  display: grid;
+  gap: 0.75rem;
+  align-content: center;
+}
+
+.threshold-stage-shell {
+  position: relative;
+  padding: 1rem;
+  border-radius: 2.4rem;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 246, 0.95), rgba(246, 238, 227, 0.9)),
+    radial-gradient(circle at top right, rgba(244, 213, 82, 0.16), transparent 28%),
+    radial-gradient(circle at bottom left, rgba(239, 182, 178, 0.14), transparent 30%);
+  border: 1px solid rgba(31, 26, 23, 0.07);
+  box-shadow: var(--shadow);
+}
+
+.threshold-door {
+  position: relative;
+  min-height: 39rem;
+  border-radius: 2rem;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(22, 17, 14, 0.97), rgba(39, 30, 23, 0.98)),
+    radial-gradient(circle at top center, rgba(255, 240, 204, 0.12), transparent 32%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+}
+
+.threshold-door::before {
+  content: "";
+  position: absolute;
+  inset: 1rem 22% auto;
+  height: 10rem;
+  border-radius: 999px 999px 0 0;
+  background: radial-gradient(circle at center bottom, rgba(255, 247, 224, 0.34), rgba(255, 247, 224, 0));
+  filter: blur(10px);
+  pointer-events: none;
+}
+
+.threshold-door-media {
+  position: absolute;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 1.4rem;
+  box-shadow: 0 24px 44px rgba(0, 0, 0, 0.22);
+}
+
+.threshold-door-media-main {
+  inset: 1.25rem 1.25rem 1.25rem 1.25rem;
+}
+
+.threshold-door-media img,
+.threshold-door-media video,
+.threshold-fragment-media img,
+.threshold-fragment-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.threshold-fragment {
+  position: absolute;
+  display: grid;
+  gap: 0.55rem;
+  width: 11rem;
+  padding: 0.7rem;
+  border-radius: 1.35rem;
+  background: rgba(255, 251, 244, 0.84);
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(16px);
+}
+
+.threshold-fragment-studio {
+  top: 1.2rem;
+  left: 1.2rem;
+  transform: rotate(-3deg);
+}
+
+.threshold-fragment-play {
+  right: 1.2rem;
+  top: 3.5rem;
+  transform: rotate(3deg);
+}
+
+.threshold-fragment-mirror {
+  left: 2rem;
+  bottom: 1.6rem;
+  transform: rotate(-2deg);
+}
+
+.threshold-fragment-media {
+  display: block;
+  margin: 0;
+  overflow: hidden;
+  border-radius: 1rem;
+  aspect-ratio: var(--asset-ratio, 0.86);
+}
+
+.threshold-fragment-copy {
+  display: grid;
+  gap: 0.12rem;
+}
+
+.threshold-fragment-copy strong,
+.threshold-compass-copy strong {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 0.96;
+}
+
+.threshold-fragment-copy span,
+.threshold-compass-copy span {
+  color: rgba(31, 26, 23, 0.58);
+  line-height: 1.4;
+}
+
+.threshold-door-plaque {
+  position: absolute;
+  right: 1.3rem;
+  bottom: 1.2rem;
+  display: grid;
+  gap: 0.2rem;
+  padding: 0.8rem 0.95rem;
+  border-radius: 1.2rem;
+  background: rgba(255, 251, 244, 0.82);
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.16);
+  backdrop-filter: blur(14px);
+}
+
+.threshold-door-plaque span {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.62rem;
+  color: rgba(31, 26, 23, 0.44);
+}
+
+.threshold-door-plaque strong {
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.65rem;
+  font-weight: 600;
+  line-height: 0.96;
+}
+
+.threshold-compass-link {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.75rem;
+  align-items: center;
+  padding: 0.95rem 1rem;
+  border-radius: 1.3rem;
+  background: rgba(255, 252, 247, 0.78);
+  border: 1px solid rgba(31, 26, 23, 0.08);
+  box-shadow: 0 16px 34px rgba(72, 48, 28, 0.05);
+  transition: transform 220ms ease, background-color 220ms ease, border-color 220ms ease;
+}
+
+.threshold-compass-link:hover {
+  transform: translateY(-0.12rem);
+  background: rgba(255, 252, 247, 0.92);
+  border-color: rgba(31, 26, 23, 0.16);
+}
+
+.threshold-compass-index {
+  display: inline-grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: rgba(255, 247, 231, 0.9);
+  font-size: 0.7rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(31, 26, 23, 0.5);
+}
+
+.threshold-compass-copy {
+  display: grid;
+  gap: 0.14rem;
+}
+
+.portal-section {
+  padding-top: 2.8rem;
+}
+
+.portal-section-heading {
+  display: grid;
+  gap: 0.5rem;
+  margin-bottom: 1.6rem;
+}
+
+.portal-section-copy {
+  margin: 0;
+  max-width: 34rem;
+  color: var(--muted);
+  line-height: 1.75;
+}
+
+.portal-grid {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: 1rem;
+  align-items: start;
+}
+
+.portal-card {
+  --portal-note-bg: rgba(255, 250, 242, 0.74);
+  --portal-entry: rgba(31, 26, 23, 0.62);
+  position: relative;
+  display: block;
+  min-height: 26rem;
+  overflow: hidden;
+  border-radius: 2rem;
+  border: 1px solid rgba(31, 26, 23, 0.08);
+  box-shadow: var(--shadow);
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
+}
+
+.portal-card:hover {
+  transform: translateY(-0.18rem);
+  border-color: rgba(31, 26, 23, 0.16);
+  box-shadow: 0 22px 44px rgba(72, 48, 28, 0.11);
+}
+
+.portal-card-studio,
+.portal-card-play {
+  grid-column: span 6;
+}
+
+.portal-card-orchard,
+.portal-card-mirror,
+.portal-card-practice {
+  grid-column: span 4;
+}
+
+.portal-card-studio {
+  --portal-note-bg: rgba(250, 241, 233, 0.76);
+  min-height: 32rem;
+}
+
+.portal-card-orchard {
+  --portal-note-bg: rgba(252, 243, 232, 0.78);
+  min-height: 28rem;
+}
+
+.portal-card-mirror {
+  --portal-note-bg: rgba(244, 242, 249, 0.78);
+  min-height: 25rem;
+}
+
+.portal-card-practice {
+  --portal-note-bg: rgba(240, 245, 238, 0.78);
+  min-height: 25rem;
+}
+
+.portal-card-play {
+  --portal-note-bg: rgba(239, 244, 250, 0.78);
+  min-height: 30rem;
+}
+
+.portal-card-media {
+  position: absolute;
+  inset: 0;
+  display: block;
+  margin: 0;
+}
+
+.portal-card-studio .portal-card-media {
+  aspect-ratio: 1.26;
+}
+
+.portal-card-orchard .portal-card-media {
+  aspect-ratio: 0.86;
+}
+
+.portal-card-mirror .portal-card-media,
+.portal-card-practice .portal-card-media {
+  aspect-ratio: 1;
+}
+
+.portal-card-play .portal-card-media {
+  aspect-ratio: 1.18;
+}
+
+.portal-card-media img,
+.portal-card-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 520ms ease, filter 320ms ease;
+}
+
+.portal-card-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(12, 10, 9, 0.06) 0%, rgba(12, 10, 9, 0.12) 34%, rgba(12, 10, 9, 0.58) 100%),
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.18), transparent 28%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.portal-card:hover .portal-card-media img,
+.portal-card:hover .portal-card-media video {
+  transform: scale(1.04);
+  filter: saturate(1.04);
+}
+
+.portal-card-copy {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  gap: 0.55rem;
+  align-content: end;
+  padding: 1.2rem 1.2rem 1.15rem;
+  color: rgba(255, 250, 244, 0.96);
+  z-index: 1;
+}
+
+.portal-card-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.65rem;
+  color: rgba(255, 247, 238, 0.72);
+}
+
+.portal-card h3 {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2rem, 3vw, 2.8rem);
+  font-weight: 600;
+  line-height: 0.94;
+  letter-spacing: -0.03em;
+  color: rgba(255, 251, 246, 0.98);
+}
+
+.portal-card-copy > p:not(.portal-card-kicker) {
+  margin: 0;
+  max-width: 30rem;
+  color: rgba(255, 247, 238, 0.84);
+  line-height: 1.72;
+}
+
+.portal-card-notes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 0.2rem;
+}
+
+.portal-card-notes span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.35rem 0.68rem;
+  border-radius: 999px;
+  background: var(--portal-note-bg);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.16em;
+  font-size: 0.6rem;
+  color: rgba(31, 26, 23, 0.58);
+}
+
+.portal-card-notes span::before {
+  content: "";
+  width: 0.32rem;
+  height: 0.32rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(244, 213, 82, 0.98), rgba(244, 196, 136, 0.88));
+}
+
+.portal-card-entry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.42rem;
+  margin-top: 0.35rem;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: var(--portal-entry);
+}
+
+.portal-card-entry::after {
+  content: "->";
+}
+
+.kingdom-manifesto {
+  padding-top: 2.8rem;
+}
+
+.kingdom-manifesto-card {
+  padding: 2rem 1.6rem;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  text-align: center;
+}
+
+.kingdom-manifesto-card p:last-child {
+  margin: 0 auto;
+  max-width: 20ch;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(2.3rem, 5vw, 4.2rem);
+  line-height: 0.98;
+}
+
+.entrance-archive {
+  padding-top: 2.8rem;
+}
+
+.entrance-archive-heading {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.entrance-archive-grid {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+}
+
+.entrance-tile {
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 246, 0.94), rgba(247, 239, 228, 0.88)),
+    radial-gradient(circle at top right, rgba(244, 213, 82, 0.1), transparent 32%);
+}
+
+.entrance-tile img,
+.entrance-tile video {
+  width: 100%;
+  height: auto;
+  transition: transform 480ms ease;
+}
+
+.entrance-tile:hover img,
+.entrance-tile:hover video {
+  transform: scale(1.03);
+}
+
+.entrance-tile-portrait img,
+.entrance-tile-portrait video {
+  aspect-ratio: 0.82;
+}
+
+.entrance-tile-square img,
+.entrance-tile-square video {
+  aspect-ratio: 1;
+}
+
+.entrance-tile-landscape img,
+.entrance-tile-landscape video {
+  aspect-ratio: 1.18;
+}
+
+.page-home-immersive {
+  max-width: 92rem;
+  min-height: calc(100svh - 4.8rem);
+  padding-top: 0.7rem;
+  padding-bottom: 0.7rem;
+}
+
+.kingdom-scene {
+  --scene-drift-x: 0px;
+  --scene-drift-y: 0px;
+  --scene-drift-x-soft: 0px;
+  --scene-drift-y-soft: 0px;
+  --scene-drift-x-mid: 0px;
+  --scene-drift-y-mid: 0px;
+  --scene-drift-x-invert: 0px;
+  --scene-drift-y-invert: 0px;
+  position: relative;
+  min-height: calc(100svh - 6rem);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-radius: 2.8rem;
+  background:
+    radial-gradient(circle at top left, rgba(255, 244, 210, 0.38), transparent 24%),
+    radial-gradient(circle at right center, rgba(239, 182, 178, 0.18), transparent 26%),
+    linear-gradient(180deg, rgba(252, 247, 238, 0.98), rgba(245, 237, 226, 0.96));
+  border: 1px solid rgba(31, 26, 23, 0.07);
+  box-shadow: var(--shadow);
+  isolation: isolate;
+}
+
+.kingdom-scene-glow {
+  position: absolute;
+  border-radius: 999px;
+  filter: blur(70px);
+  opacity: 0.6;
+  pointer-events: none;
+  transition: transform 360ms ease;
+  animation: kingdom-glow-breathe 16s ease-in-out infinite;
+}
+
+.kingdom-scene-glow-one {
+  width: 18rem;
+  height: 18rem;
+  left: -5rem;
+  top: -4rem;
+  background: rgba(244, 213, 82, 0.34);
+  transform: translate3d(var(--scene-drift-x-soft), var(--scene-drift-y-soft), 0);
+}
+
+.kingdom-scene-glow-two {
+  width: 22rem;
+  height: 22rem;
+  right: -8rem;
+  top: 16%;
+  background: rgba(157, 178, 199, 0.18);
+  transform: translate3d(var(--scene-drift-x-invert), var(--scene-drift-y-invert), 0);
+  animation-delay: 1800ms;
+}
+
+.kingdom-scene-glow-three {
+  width: 16rem;
+  height: 16rem;
+  left: 22%;
+  bottom: -5rem;
+  background: rgba(239, 182, 178, 0.22);
+  transform: translate3d(var(--scene-drift-x-mid), var(--scene-drift-y-invert), 0);
+  animation-delay: 900ms;
+}
+
+.kingdom-cloudfield {
+  position: relative;
+  width: min(100%, 84rem);
+  min-height: min(72vh, 48rem);
+  z-index: 1;
+  perspective: 1600px;
+}
+
+.kingdom-axis {
+  position: absolute;
+  left: 50%;
+  top: 38%;
+  width: min(13rem, 18vw);
+  transform: translate(-50%, -50%) translate3d(var(--scene-drift-x-soft), var(--scene-drift-y-soft), 0);
+  display: grid;
+  gap: 0.35rem;
+  text-align: center;
+  transition: transform 360ms ease;
+  animation: kingdom-heart-breathe 11s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 2;
+}
+
+.kingdom-axis-kicker,
+.kingdom-axis-title,
+.kingdom-axis-note {
+  margin: 0;
+}
+
+.kingdom-axis-kicker {
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.62rem;
+  color: rgba(31, 26, 23, 0.42);
+}
+
+.kingdom-axis-title {
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.9rem, 2.6vw, 2.7rem);
+  line-height: 0.96;
+  letter-spacing: -0.025em;
+  color: rgba(31, 26, 23, 0.82);
+}
+
+.kingdom-axis-note {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.56rem;
+  line-height: 1.6;
+  color: rgba(31, 26, 23, 0.38);
+}
+
+.realm-cloud {
+  --cloud-tint: rgba(255, 251, 245, 0.72);
+  --cloud-duration: 8s;
+  --cloud-offset: -0.9rem;
+  --cloud-orbit-x: 0.6rem;
+  --cloud-tilt-start: -2deg;
+  --cloud-tilt-mid: 1deg;
+  --cloud-tilt-end: 2deg;
+  position: absolute;
+  display: block;
+  width: clamp(14rem, 20vw, 20rem);
+  aspect-ratio: 1.08;
+  transition: transform 320ms ease, filter 320ms ease;
+  z-index: 1;
+}
+
+.realm-cloud:hover {
+  filter: drop-shadow(0 24px 44px rgba(72, 48, 28, 0.16));
+}
+
+.realm-cloud-shell {
+  --cloud-scene-transform: translate3d(var(--scene-drift-x-soft), var(--scene-drift-y-soft), 0);
+  position: relative;
+  display: grid;
+  align-items: end;
+  width: 100%;
+  height: 100%;
+  padding: 1rem;
+  border-radius: 44% 56% 54% 46% / 42% 46% 54% 58%;
+  background:
+    radial-gradient(circle at 28% 24%, rgba(255, 255, 255, 0.92), rgba(255, 255, 255, 0) 34%),
+    radial-gradient(circle at 72% 28%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0) 36%),
+    radial-gradient(circle at 52% 82%, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0) 36%),
+    linear-gradient(180deg, rgba(255, 252, 247, 0.76), var(--cloud-tint));
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  box-shadow: 0 26px 54px rgba(72, 48, 28, 0.12);
+  backdrop-filter: blur(20px) saturate(120%);
+  overflow: hidden;
+  transition: box-shadow 240ms ease, scale 240ms ease;
+  animation: realm-cloud-orbit var(--cloud-duration) ease-in-out infinite;
+  will-change: transform;
+}
+
+.realm-cloud-shell::before,
+.realm-cloud-shell::after {
+  content: "";
+  position: absolute;
+  inset: auto;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.realm-cloud-shell::before {
+  width: 68%;
+  height: 44%;
+  left: -6%;
+  top: 10%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0));
+  filter: blur(18px);
+  opacity: 0.92;
+}
+
+.realm-cloud-shell::after {
+  width: 54%;
+  height: 36%;
+  right: -2%;
+  bottom: 6%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0));
+  filter: blur(16px);
+  opacity: 0.8;
+}
+
+.realm-cloud:hover .realm-cloud-shell {
+  box-shadow: 0 26px 54px rgba(72, 48, 28, 0.14);
+  scale: 1.03;
+}
+
+.realm-cloud-aura {
+  position: absolute;
+  border-radius: 999px;
+  pointer-events: none;
+}
+
+.realm-cloud-aura-one {
+  inset: auto -10% -18% auto;
+  width: 72%;
+  height: 54%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.36), rgba(255, 255, 255, 0));
+  filter: blur(10px);
+}
+
+.realm-cloud-aura-two {
+  inset: -12% auto auto -8%;
+  width: 50%;
+  height: 40%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.28), rgba(255, 255, 255, 0));
+  filter: blur(10px);
+}
+
+.realm-cloud-media {
+  position: absolute;
+  inset: 1.05rem;
+  margin: 0;
+  border-radius: 45% 55% 54% 46% / 42% 45% 55% 58%;
+  overflow: hidden;
+}
+
+.realm-cloud-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(12, 10, 9, 0.06), rgba(12, 10, 9, 0.3)),
+    radial-gradient(circle at top center, rgba(255, 255, 255, 0.14), transparent 26%);
+}
+
+.realm-cloud-media img,
+.realm-cloud-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 520ms ease, filter 320ms ease;
+}
+
+.realm-cloud:hover .realm-cloud-media img,
+.realm-cloud:hover .realm-cloud-media video {
+  transform: scale(1.05);
+  filter: saturate(1.06);
+}
+
+.realm-cloud-copy {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  gap: 0.22rem;
+  padding: 0.5rem 0.6rem 0.35rem;
+  color: rgba(255, 251, 246, 0.96);
+}
+
+.realm-cloud-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.56rem;
+  color: rgba(255, 245, 236, 0.72);
+}
+
+.realm-cloud-copy strong {
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.7rem, 2.3vw, 2.4rem);
+  font-weight: 600;
+  line-height: 0.94;
+}
+
+.realm-cloud-studio {
+  --cloud-duration: 8.4s;
+  --cloud-offset: -1.05rem;
+  --cloud-orbit-x: 0.72rem;
+  --cloud-tilt-start: -4deg;
+  --cloud-tilt-mid: 1deg;
+  --cloud-tilt-end: 3deg;
+  --cloud-tint: rgba(249, 244, 237, 0.82);
+  left: 4%;
+  top: 7%;
+}
+
+.realm-cloud-studio .realm-cloud-shell {
+  --cloud-scene-transform: translate3d(var(--scene-drift-x-invert), var(--scene-drift-y-soft), 0);
+}
+
+.realm-cloud-orchard {
+  --cloud-duration: 7.5s;
+  --cloud-offset: -0.82rem;
+  --cloud-orbit-x: -0.62rem;
+  --cloud-tilt-start: 3deg;
+  --cloud-tilt-mid: -2deg;
+  --cloud-tilt-end: 2deg;
+  --cloud-tint: rgba(252, 244, 236, 0.84);
+  right: 3%;
+  top: 4%;
+  width: clamp(16rem, 23vw, 23rem);
+}
+
+.realm-cloud-orchard .realm-cloud-shell {
+  --cloud-scene-transform: translate3d(var(--scene-drift-x-mid), var(--scene-drift-y-soft), 0);
+}
+
+.realm-cloud-mirror {
+  --cloud-duration: 8.8s;
+  --cloud-offset: -0.96rem;
+  --cloud-orbit-x: 0.56rem;
+  --cloud-tilt-start: -3deg;
+  --cloud-tilt-mid: 2deg;
+  --cloud-tilt-end: 4deg;
+  --cloud-tint: rgba(245, 244, 249, 0.84);
+  left: 1%;
+  bottom: 13%;
+}
+
+.realm-cloud-mirror .realm-cloud-shell {
+  --cloud-scene-transform: translate3d(var(--scene-drift-x-soft), var(--scene-drift-y-invert), 0);
+}
+
+.realm-cloud-practice {
+  --cloud-duration: 8.1s;
+  --cloud-offset: -0.88rem;
+  --cloud-orbit-x: -0.48rem;
+  --cloud-tilt-start: 2deg;
+  --cloud-tilt-mid: -1deg;
+  --cloud-tilt-end: -3deg;
+  --cloud-tint: rgba(242, 246, 241, 0.84);
+  right: 1%;
+  bottom: 15%;
+}
+
+.realm-cloud-practice .realm-cloud-shell {
+  --cloud-scene-transform: translate3d(var(--scene-drift-x-invert), var(--scene-drift-y-mid), 0);
+}
+
+.realm-cloud-play {
+  --cloud-duration: 7.8s;
+  --cloud-offset: -1.12rem;
+  --cloud-orbit-x: 0.42rem;
+  --cloud-tilt-start: -1deg;
+  --cloud-tilt-mid: 2deg;
+  --cloud-tilt-end: -2deg;
+  --cloud-tint: rgba(240, 245, 250, 0.86);
+  left: 50%;
+  bottom: -3%;
+  width: clamp(16rem, 22vw, 22rem);
+  transform: translateX(-50%);
+  z-index: 1;
+}
+
+.realm-cloud-play .realm-cloud-shell {
+  --cloud-scene-transform: translate3d(var(--scene-drift-x-soft), var(--scene-drift-y-invert), 0);
+}
+
+.kingdom-scene-footer {
+  position: absolute;
+  left: 50%;
+  bottom: 1.25rem;
+  transform: translateX(-50%);
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-size: 0.64rem;
+  color: rgba(31, 26, 23, 0.46);
 }
 
 .eyebrow,
@@ -1571,6 +2460,230 @@ button:disabled {
   background: rgba(255, 251, 245, 0.94);
 }
 
+.page-artwork {
+  display: grid;
+  gap: 2.6rem;
+}
+
+.page-route-bridge {
+  min-height: 40vh;
+}
+
+.artwork-stage-section {
+  display: grid;
+  gap: 1.35rem;
+  padding-top: 1rem;
+}
+
+.artwork-stage-shell {
+  width: min(100%, 72rem);
+  margin: 0 auto;
+  padding: 1rem;
+  border-radius: 2.5rem;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 246, 0.95), rgba(245, 237, 226, 0.88)),
+    radial-gradient(circle at top right, rgba(174, 201, 117, 0.16), transparent 26%),
+    radial-gradient(circle at bottom left, rgba(244, 196, 136, 0.12), transparent 34%);
+  border: 1px solid rgba(31, 26, 23, 0.07);
+  box-shadow: var(--shadow);
+}
+
+.artwork-stage-shell-portrait {
+  max-width: 31rem;
+}
+
+.artwork-stage-shell-square {
+  max-width: 42rem;
+}
+
+.artwork-stage {
+  position: relative;
+  width: 100%;
+  aspect-ratio: var(--asset-ratio);
+  border-radius: 1.85rem;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(12, 9, 8, 0.98), rgba(28, 22, 18, 0.98)),
+    radial-gradient(circle at top right, rgba(255, 255, 255, 0.08), transparent 28%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.06),
+    0 24px 58px rgba(45, 28, 19, 0.18);
+}
+
+.artwork-stage-media {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.artwork-stage-media.is-active {
+  opacity: 1;
+}
+
+.artwork-stage-asset,
+.artwork-stage-media img,
+.artwork-stage-media video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.artwork-stage-progress {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+  padding: 0.45rem 0.58rem;
+  border-radius: 999px;
+  background: rgba(18, 14, 12, 0.46);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(14px);
+}
+
+.artwork-stage-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  padding: 0;
+  border: none;
+  border-radius: 999px;
+  background: rgba(255, 250, 244, 0.34);
+  transition: width 180ms ease, background-color 180ms ease;
+}
+
+.artwork-stage-dot.is-active {
+  width: 1.55rem;
+  background: rgba(255, 250, 244, 0.94);
+}
+
+.artwork-plaque {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(18rem, 0.8fr);
+  gap: 1.3rem;
+  align-items: start;
+}
+
+.artwork-plaque-main {
+  display: grid;
+  gap: 0.9rem;
+  align-content: start;
+}
+
+.artwork-plaque-main h1 {
+  margin: 0;
+  max-width: 10ch;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(3.4rem, 6vw, 5.8rem);
+  font-weight: 600;
+  line-height: 0.9;
+  letter-spacing: -0.04em;
+}
+
+.artwork-summary {
+  margin: 0;
+  max-width: 34rem;
+  color: rgba(31, 26, 23, 0.74);
+  font-size: 1.06rem;
+  line-height: 1.84;
+}
+
+.artwork-archive-link {
+  display: inline-flex;
+  justify-self: start;
+  align-items: center;
+  gap: 0.4rem;
+  color: rgba(31, 26, 23, 0.74);
+  text-decoration: none;
+  border-bottom: 1px solid rgba(31, 26, 23, 0.18);
+  padding-bottom: 0.08rem;
+}
+
+.artwork-plaque-side {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.artwork-facts-shell {
+  display: grid;
+  gap: 0.8rem;
+  padding: 1rem 1.05rem;
+  border-radius: 1.5rem;
+  background:
+    linear-gradient(180deg, rgba(255, 252, 246, 0.94), rgba(247, 240, 230, 0.86)),
+    radial-gradient(circle at top right, rgba(244, 213, 82, 0.12), transparent 32%);
+  border: 1px solid rgba(31, 26, 23, 0.07);
+}
+
+.artwork-meta-label {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.22em;
+  font-size: 0.66rem;
+  color: rgba(31, 26, 23, 0.46);
+}
+
+.artwork-facts {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem 1rem;
+}
+
+.artwork-tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.artwork-tag-row span {
+  border-radius: 999px;
+  padding: 0.42rem 0.72rem;
+  background: rgba(255, 250, 242, 0.74);
+  border: 1px solid rgba(31, 26, 23, 0.08);
+  font-size: 0.72rem;
+  color: rgba(31, 26, 23, 0.64);
+}
+
+.artwork-plaque-side .room-whisper {
+  margin-top: 0;
+}
+
+.artwork-details-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.artwork-section-heading {
+  margin-bottom: 0;
+}
+
+.artwork-section-heading h2 {
+  max-width: 9ch;
+}
+
+.artwork-media-mosaic {
+  margin-top: 0;
+}
+
+.artwork-media-card {
+  background: rgba(255, 253, 248, 0.9);
+}
+
+.artwork-related-section {
+  display: grid;
+  gap: 1rem;
+}
+
+.artwork-related-section .section-heading {
+  margin-bottom: 0;
+}
+
+.artwork-related-section .realm-gallery {
+  margin-top: 0;
+}
+
 .work-stack {
   display: grid;
   gap: 1rem;
@@ -2139,6 +3252,10 @@ button:disabled {
 }
 
 @media (max-width: 1180px) {
+  .artwork-plaque {
+    grid-template-columns: 1fr;
+  }
+
   .work-hero-stage {
     min-height: 35rem;
   }
@@ -2229,9 +3346,97 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
+  .page-home-immersive {
+    min-height: calc(100svh - 4.6rem);
+  }
+
+  .kingdom-scene {
+    min-height: calc(100svh - 6rem);
+  }
+
+  .kingdom-cloudfield {
+    min-height: min(68vh, 42rem);
+  }
+
+  .kingdom-axis {
+    top: 34%;
+    width: min(10rem, 28vw);
+  }
+
+  .kingdom-axis-title {
+    font-size: clamp(1.55rem, 3vw, 2.2rem);
+  }
+
+  .kingdom-axis-note {
+    font-size: 0.5rem;
+  }
+
+  .realm-cloud {
+    width: clamp(8.8rem, 18vw, 12.5rem);
+  }
+
+  .realm-cloud-orchard {
+    width: clamp(10rem, 20vw, 13rem);
+  }
+
+  .realm-cloud-studio {
+    left: 4%;
+  }
+
+  .realm-cloud-orchard {
+    right: 4%;
+  }
+
+  .realm-cloud-mirror {
+    left: 2%;
+  }
+
+  .realm-cloud-practice {
+    right: 2%;
+  }
+
   .realm-grid,
   .featured-grid,
   .media-mosaic {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .portal-card-studio,
+  .portal-card-play {
+    grid-column: span 2;
+  }
+
+  .portal-card-orchard,
+  .portal-card-mirror,
+  .portal-card-practice {
+    grid-column: span 1;
+  }
+
+  .entrance-archive-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .artwork-stage-shell {
+    padding: 0.9rem;
+  }
+
+  .artwork-stage-shell-portrait {
+    max-width: 27rem;
+  }
+
+  .artwork-stage-shell-square {
+    max-width: 34rem;
+  }
+
+  .artwork-plaque-main h1 {
+    font-size: clamp(3rem, 9vw, 4.7rem);
+  }
+
+  .artwork-facts {
     grid-template-columns: 1fr;
   }
 
@@ -2319,6 +3524,111 @@ button:disabled {
     column-count: 1;
   }
 
+  .page-home-immersive {
+    padding-inline: 1rem;
+  }
+
+  .kingdom-scene {
+    min-height: calc(100svh - 5.6rem);
+    border-radius: 2rem;
+  }
+
+  .kingdom-cloudfield {
+    min-height: 31.5rem;
+  }
+
+  .kingdom-axis {
+    top: 30%;
+    width: min(9rem, 42vw);
+  }
+
+  .kingdom-axis-title {
+    font-size: clamp(1.35rem, 6vw, 1.9rem);
+  }
+
+  .kingdom-axis-note {
+    display: none;
+  }
+
+  .kingdom-axis-kicker {
+    font-size: 0.52rem;
+  }
+
+  .realm-cloud {
+    width: 7.4rem;
+    padding: 0.5rem;
+  }
+
+  .realm-cloud-orchard,
+  .realm-cloud-play {
+    width: 8.2rem;
+  }
+
+  .realm-cloud-studio {
+    top: 6%;
+    left: 2%;
+  }
+
+  .realm-cloud-orchard {
+    top: 6%;
+    right: 2%;
+  }
+
+  .realm-cloud-mirror {
+    left: 0;
+    bottom: 18%;
+  }
+
+  .realm-cloud-practice {
+    right: 0;
+    bottom: 18%;
+  }
+
+  .realm-cloud-play {
+    bottom: 4%;
+  }
+
+  .realm-cloud-kicker {
+    display: none;
+  }
+
+  .realm-cloud-copy strong {
+    font-size: 1.35rem;
+  }
+
+  .kingdom-scene-footer {
+    width: 100%;
+    padding-inline: 1rem;
+    text-align: center;
+    font-size: 0.56rem;
+  }
+
+  .portal-grid,
+  .entrance-archive-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .portal-card-studio,
+  .portal-card-orchard,
+  .portal-card-mirror,
+  .portal-card-practice,
+  .portal-card-play {
+    grid-column: span 1;
+  }
+
+  .portal-card {
+    border-radius: 1.6rem;
+    min-height: 23rem;
+  }
+
+  .portal-card h3 {
+    font-size: 2rem;
+  }
+
+  .portal-card-notes span {
+    font-size: 0.56rem;
+  }
+
   .hero-notes-row span,
   .realm-card-notes span,
   .citrus-interlude-note {
@@ -2344,6 +3654,31 @@ button:disabled {
 
   .room-whisper-title {
     font-size: 1.15rem;
+  }
+
+  .artwork-stage-shell {
+    padding: 0.8rem;
+    border-radius: 1.8rem;
+  }
+
+  .artwork-stage {
+    border-radius: 1.25rem;
+  }
+
+  .artwork-summary {
+    font-size: 0.98rem;
+  }
+
+  .artwork-plaque-main h1 {
+    font-size: clamp(2.7rem, 13vw, 4rem);
+  }
+
+  .artwork-stage-progress {
+    bottom: 0.8rem;
+  }
+
+  .artwork-tag-row span {
+    font-size: 0.68rem;
   }
 
   .gallery-piece {
@@ -2432,6 +3767,15 @@ button:disabled {
   }
 
   .site-main,
+  .realm-cloud,
+  .realm-cloud-media img,
+  .realm-cloud-media video,
+  .kingdom-scene-glow,
+  .portal-card,
+  .portal-card-media img,
+  .portal-card-media video,
+  .entrance-tile img,
+  .entrance-tile video,
   .gallery-piece,
   .gallery-piece-media img,
   .gallery-piece-media video,

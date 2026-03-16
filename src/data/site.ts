@@ -256,6 +256,14 @@ export function getWorkBySlug(slug: string): Work | undefined {
   return siteManifest.works.find((work) => work.slug === slug);
 }
 
+export function isCaseStudyWork(work: Pick<Work, "realmSlug">): boolean {
+  return work.realmSlug === "practice";
+}
+
+export function getWorkHref(work: Pick<Work, "slug" | "realmSlug">): string {
+  return isCaseStudyWork(work) ? `/case-study/${work.slug}` : `/artworks/${work.slug}`;
+}
+
 export function getWorksForRealm(slug: string): Work[] {
   return siteManifest.works.filter(
     (work) =>

@@ -5,6 +5,7 @@ import {
   getRealmBySlug,
   getWorkBySlug,
   getWorksForRealm,
+  isCaseStudyWork,
   isLazyAssetPath,
   resolveLazyAssetPath,
 } from "./data/site";
@@ -29,9 +30,15 @@ export interface ManagedRouteDetails {
 const resolvedPathCache = new Map<string, Promise<string>>();
 const preloadCache = new Map<string, Promise<void>>();
 
+export function getManagedWorkSlug(path: string): string | null {
+  if (path.startsWith("/case-study/")) return path.replace("/case-study/", "");
+  if (path.startsWith("/artworks/")) return path.replace("/artworks/", "");
+  return null;
+}
+
 export function getManagedRouteKind(path: string): ManagedRouteKind | null {
   if (path.startsWith("/realm/")) return "realm";
-  if (path.startsWith("/work/")) return "work";
+  if (getManagedWorkSlug(path)) return "work";
   return null;
 }
 
@@ -64,16 +71,19 @@ export function getManagedRouteDetails(path: string): ManagedRouteDetails | null
     };
   }
 
-  if (path.startsWith("/work/")) {
-    const workSlug = path.replace("/work/", "");
+  const workSlug = getManagedWorkSlug(path);
+  if (workSlug) {
     const work = getWorkBySlug(workSlug);
     if (!work) return null;
+    const isCaseStudy = isCaseStudyWork(work);
 
     return {
       kind: "work",
       title: work.title,
-      eyebrow: "Opening dossier",
-      description: "The piece comes forward in one breath.",
+      eyebrow: isCaseStudy ? "Opening dossier" : "Entering artwork",
+      description: isCaseStudy
+        ? "The project opens with context first."
+        : "The study steps quietly into view.",
       mediaTargets: work.media.map((media, index) => ({
         media,
         mode:

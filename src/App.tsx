@@ -17,16 +17,18 @@ import {
   asset,
   getRealmBySlug,
   getRealms,
+  getWorkHref,
   getWorkBySlug,
   getWorksForRealm,
   getRelatedWorks,
+  isCaseStudyWork,
   isLazyAssetPath,
-  siteManifest,
 } from "./data/site";
 import {
   createMediaAspectStyle,
   getManagedRouteDetails,
   getManagedRouteKind,
+  getManagedWorkSlug,
   preloadManagedRoute,
   resolveMediaAssetPath,
   type ManagedRouteKind,
@@ -71,14 +73,6 @@ interface RoomWhisper {
   title: string;
   cues: RealmCue[];
 }
-
-const REALM_SENSORY_NOTES: Record<RealmSlug, string[]> = {
-  studio: ["graphite dust", "paper grain", "quiet pigment"],
-  orchard: ["zest release", "petal hush", "warm table light"],
-  mirror: ["soft glow", "private gaze", "silk shadow"],
-  practice: ["clear rhythm", "warm systems", "measured light"],
-  play: ["spark drift", "elastic motion", "bright collision"],
-};
 
 const ROOM_WHISPERS: Record<RealmSlug, RoomWhisper> = {
   studio: {
@@ -128,6 +122,31 @@ const ROOM_WHISPERS: Record<RealmSlug, RoomWhisper> = {
   },
 };
 
+const PORTAL_NUMERALS = ["I", "II", "III", "IV", "V"] as const;
+
+const KINGDOM_PORTAL_DETAILS: Record<RealmSlug, { chapter: string; invitation: string }> = {
+  studio: {
+    chapter: "Drawing chamber",
+    invitation: "Marks, paper, and visual studies arrive before explanation.",
+  },
+  orchard: {
+    chapter: "Citrus conservatory",
+    invitation: "Blossom light, petals, fruit, and abundance gather in one warm room.",
+  },
+  mirror: {
+    chapter: "Looking room",
+    invitation: "Portraiture, selfhood, and interior life move through powdery light.",
+  },
+  practice: {
+    chapter: "Working wing",
+    invitation: "Interfaces and systems are treated with the same sensitivity as art.",
+  },
+  play: {
+    chapter: "Open field",
+    invitation: "Motion, experiments, and image collisions stay loose and curious.",
+  },
+};
+
 const PRELOAD_TIMEOUT_MS = 6500;
 const RouteRevealContext = createContext<Accessor<boolean>>();
 
@@ -171,10 +190,6 @@ function getTransitionProfile(kind: ManagedRouteKind, source: TransitionSource, 
   return kind === "realm"
     ? { coverMs: 320, minMs: 1760, revealMs: 620 }
     : { coverMs: 190, minMs: 980, revealMs: 420 };
-}
-
-function getRealmSensoryNotes(realmSlug: RealmSlug): string[] {
-  return REALM_SENSORY_NOTES[realmSlug];
 }
 
 function buildInterludeNotes(state: InterludeState): string[] {
@@ -346,7 +361,7 @@ function RealmGallery(props: { works: Work[] }): JSX.Element {
 
           return (
             <A
-              href={`/work/${work.slug}`}
+              href={getWorkHref(work)}
               class={`gallery-piece gallery-piece-${pieceShape} ${leadMedia.kind === "video" ? "gallery-piece-video" : "gallery-piece-image"}`}
             >
               <figure class="gallery-piece-media" style={createMediaAspectStyle(leadMedia)}>
@@ -368,6 +383,92 @@ function RealmGallery(props: { works: Work[] }): JSX.Element {
           );
         }}
       </For>
+    </section>
+  );
+}
+
+function useHeroCarousel(work: Accessor<Work | undefined>, isRouteVisible: Accessor<boolean>) {
+  const [heroSlideIndex, setHeroSlideIndex] = createSignal(0);
+
+  createEffect(() => {
+    const resolved = work();
+    if (!resolved || !isRouteVisible()) return;
+
+    setHeroSlideIndex(0);
+
+    const slides = resolved.media.slice(0, 5);
+    if (slides.length < 2) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+
+    const introSlides = slides.slice(1, 4).map((_, index) => index + 1);
+    const timers: number[] = [];
+    let elapsed = 1450;
+
+    for (const slideIndex of introSlides) {
+      timers.push(window.setTimeout(() => setHeroSlideIndex(slideIndex), elapsed));
+      elapsed += 720;
+    }
+
+    timers.push(window.setTimeout(() => setHeroSlideIndex(0), elapsed));
+
+    onCleanup(() => {
+      for (const timer of timers) window.clearTimeout(timer);
+    });
+  });
+
+  return {
+    heroSlides: () => work()?.media.slice(0, 5) ?? [],
+    heroSlideIndex,
+    setHeroSlideIndex,
+  };
+}
+
+function RelatedWorksSection(props: {
+  works: Work[];
+  title: string;
+  copy: string;
+  eyebrow?: string;
+}): JSX.Element {
+  return (
+    <section class="related-section">
+      <div class="related-shell">
+        <div class="related-header">
+          <p class="eyebrow">{props.eyebrow ?? "Nearby pieces"}</p>
+          <h2>{props.title}</h2>
+          <p class="related-copy">{props.copy}</p>
+        </div>
+        <div class="related-grid">
+          <For each={props.works}>
+            {(item, index) => (
+              <A href={getWorkHref(item)} class={`related-card related-card-tone-${index() % 3}`}>
+                <figure class="related-card-media">
+                  {renderMediaAsset(item.media[0])}
+                </figure>
+                <div class="related-card-copy">
+                  <p class="related-card-kicker">
+                    {item.year} / {item.medium}
+                  </p>
+                  <h3>{item.title}</h3>
+                  <p>{item.summary}</p>
+                </div>
+              </A>
+            )}
+          </For>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function ArtworkRelatedSection(props: { works: Work[] }): JSX.Element {
+  return (
+    <section class="artwork-related-section">
+      <div class="section-heading artwork-section-heading">
+        <p class="eyebrow">Nearby works</p>
+        <h2>More from this room</h2>
+        <p class="related-copy">Adjacent studies gathered from the same visual world.</p>
+      </div>
+      <RealmGallery works={props.works} />
     </section>
   );
 }
@@ -418,8 +519,8 @@ function RootShell(props: ParentProps) {
       if (realm) title = `${realm.name} — Kate Goncharova`;
     }
 
-    if (path.startsWith("/work/")) {
-      const slug = path.replace("/work/", "");
+    const slug = getManagedWorkSlug(path);
+    if (slug) {
       const work = getWorkBySlug(slug);
       if (work) title = `${work.title} — Kate Goncharova`;
     }
@@ -912,121 +1013,76 @@ function polarPoint(cx: number, cy: number, radius: number, angle: number): { x:
 
 function HomePage() {
   const realms = getRealms();
+  const [sceneDrift, setSceneDrift] = createSignal({ x: 0, y: 0 });
+
+  const handleScenePointerMove = (event: PointerEvent & { currentTarget: HTMLElement }) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const offsetX = (event.clientX - rect.left) / rect.width - 0.5;
+    const offsetY = (event.clientY - rect.top) / rect.height - 0.5;
+
+    setSceneDrift({
+      x: Math.max(-1, Math.min(1, offsetX)) * 34,
+      y: Math.max(-1, Math.min(1, offsetY)) * 26,
+    });
+  };
+
+  const resetScenePointer = () => setSceneDrift({ x: 0, y: 0 });
 
   return (
-    <div class="page page-home">
-      <section class="hero">
-        <div class="hero-copy">
-          <p class="eyebrow">Living Studio</p>
-          <h1>
-            Her space is made of paper, sunlight, citrus, flowers, rooms, and
-            image-making.
-          </h1>
-          <p class="hero-text">
-            Kate Goncharova is an artist-shaped visual world: drawings,
-            photographs, branding, product thinking, tender studies, and visual
-            experiments living together instead of asking permission from one
-            another.
-          </p>
-          <div class="hero-actions">
-            <A href="/realm/studio" class="button button-dark">
-              Enter the studio
-            </A>
-            <A href="/realm/orchard" class="button">
-              Follow the citrus trail
-            </A>
-          </div>
-          <div class="hero-notes">
-            <p class="hero-notes-label">Harvest notes</p>
-            <div class="hero-notes-row">
-              <For each={getRealmSensoryNotes("orchard")}>
-                {(note) => <span>{note}</span>}
-              </For>
-            </div>
-          </div>
-        </div>
+    <div class="page page-home page-home-immersive">
+      <section
+        class="kingdom-scene"
+        aria-label="Entrance to Kate's digital kingdom"
+        style={{
+          "--scene-drift-x": `${sceneDrift().x}px`,
+          "--scene-drift-y": `${sceneDrift().y}px`,
+          "--scene-drift-x-soft": `${sceneDrift().x * 0.35}px`,
+          "--scene-drift-y-soft": `${sceneDrift().y * 0.35}px`,
+          "--scene-drift-x-mid": `${sceneDrift().x * 0.6}px`,
+          "--scene-drift-y-mid": `${sceneDrift().y * 0.6}px`,
+          "--scene-drift-x-invert": `${sceneDrift().x * -0.28}px`,
+          "--scene-drift-y-invert": `${sceneDrift().y * -0.28}px`,
+        }}
+        onPointerMove={handleScenePointerMove}
+        onPointerLeave={resetScenePointer}
+      >
+        <div class="kingdom-scene-glow kingdom-scene-glow-one" aria-hidden="true" />
+        <div class="kingdom-scene-glow kingdom-scene-glow-two" aria-hidden="true" />
+        <div class="kingdom-scene-glow kingdom-scene-glow-three" aria-hidden="true" />
 
-        <div class="still-life" aria-hidden="true">
-          <div class="still-life-sun" />
-          <div class="still-life-table" />
-          <div class="branch branch-main" />
-          <div class="leaf leaf-one" />
-          <div class="leaf leaf-two" />
-          <div class="fruit fruit-orange" />
-          <div class="fruit fruit-lemon" />
-          <div class="citrus-slice" />
-          <div class="petal petal-one" />
-          <div class="petal petal-two" />
-          <div class="blossom-cluster">
-            <span class="blossom blossom-one" />
-            <span class="blossom blossom-two" />
-            <span class="blossom blossom-three" />
-          </div>
-          <div class="seed-row">
-            <span class="seed seed-one" />
-            <span class="seed seed-two" />
-            <span class="seed seed-three" />
-          </div>
-          <div class="note-card">
-            <span>touch-first</span>
-            <span>tender + sunlit</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="realm-grid-section">
-        <div class="section-heading">
-          <p class="eyebrow">Portals</p>
-          <h2>Five rooms in one kingdom</h2>
-        </div>
-        <div class="realm-grid">
+        <div class="kingdom-cloudfield">
           <For each={realms}>
-            {(realm) => (
-              <A href={`/realm/${realm.slug}`} class="realm-card">
-                <figure class="realm-card-media">
-                  {renderMediaAsset(realm.coverMedia)}
-                </figure>
-                <div class="realm-card-copy">
-                  <p class="realm-card-kicker">{realm.subtitle}</p>
-                  <h3>{realm.name}</h3>
-                  <p>{realm.intro}</p>
-                  <div class="realm-card-notes">
-                    <For each={getRealmSensoryNotes(realm.slug).slice(0, 2)}>
-                      {(note) => <span>{note}</span>}
-                    </For>
+            {(realm, index) => (
+              <A href={`/realm/${realm.slug}`} class={`realm-cloud realm-cloud-${realm.slug}`}>
+                <span class="realm-cloud-shell">
+                  <span class="realm-cloud-aura realm-cloud-aura-one" aria-hidden="true" />
+                  <span class="realm-cloud-aura realm-cloud-aura-two" aria-hidden="true" />
+                  <figure class="realm-cloud-media" style={createMediaAspectStyle(realm.coverMedia)}>
+                    {renderMediaAsset(realm.coverMedia, {
+                      autoplay: realm.coverMedia.kind === "video",
+                      preload: realm.coverMedia.kind === "video" ? "metadata" : undefined,
+                      loading: "eager",
+                    })}
+                  </figure>
+                  <div class="realm-cloud-copy">
+                    <p class="realm-cloud-kicker">
+                      {PORTAL_NUMERALS[index()]} / {KINGDOM_PORTAL_DETAILS[realm.slug].chapter}
+                    </p>
+                    <strong>{realm.name}</strong>
                   </div>
-                </div>
+                </span>
               </A>
             )}
           </For>
-        </div>
-      </section>
 
-      <section class="quote-band">
-        <p>
-          “Visual sensitivity” is the medium. Design is only one branch of the
-          same practice.
-        </p>
-      </section>
+          <div class="kingdom-axis">
+            <p class="kingdom-axis-kicker">Kate's Digital Kingdom</p>
+            <p class="kingdom-axis-title">Choose by instinct.</p>
+            <p class="kingdom-axis-note">The clouds are the map.</p>
+          </div>
+        </div>
 
-      <section class="featured-strip">
-        <div class="section-heading">
-          <p class="eyebrow">Featured works</p>
-          <h2>Editorial fragments from the living studio</h2>
-        </div>
-        <div class="featured-grid">
-          <For each={siteManifest.works.slice(0, 6)}>
-            {(work) => (
-              <A href={`/work/${work.slug}`} class="work-tile">
-                {renderMediaAsset(work.media[0])}
-                <div class="work-tile-copy">
-                  <span>{work.year}</span>
-                  <strong>{work.title}</strong>
-                </div>
-              </A>
-            )}
-          </For>
-        </div>
+        <p class="kingdom-scene-footer">Move through the clouds.</p>
       </section>
     </div>
   );
@@ -1289,45 +1345,206 @@ function renderCaseStudySection(section: {
   );
 }
 
-function WorkPage() {
+function ArtworkPage() {
   const params = useParams();
-  const workSlug = () => params.workSlug ?? "";
-  const work = () => getWorkBySlug(workSlug());
+  const navigate = useNavigate();
+  const artworkSlug = () => params.artworkSlug ?? "";
+  const artwork = () => getWorkBySlug(artworkSlug());
   const isRouteVisible = useRouteReveal();
-  const [heroSlideIndex, setHeroSlideIndex] = createSignal(0);
+  const { heroSlides, heroSlideIndex, setHeroSlideIndex } = useHeroCarousel(artwork, isRouteVisible);
+
+  createEffect(() => {
+    const resolved = artwork();
+    if (resolved && isCaseStudyWork(resolved)) {
+      navigate(getWorkHref(resolved), { replace: true });
+    }
+  });
+
+  return (
+    <Show when={artwork()} fallback={<NotFoundPage />}>
+      {(resolvedArtwork) => {
+        if (isCaseStudyWork(resolvedArtwork())) {
+          return <div class="page page-route-bridge" />;
+        }
+
+        const realm = () => getRealmBySlug(resolvedArtwork().realmSlug);
+        const related = () => getRelatedWorks(resolvedArtwork().slug);
+        const leadMedia = () => resolvedArtwork().media[0]!;
+        const leadShape = () => getGalleryPieceShape(leadMedia());
+        const additionalMedia = () => resolvedArtwork().media.slice(1);
+
+        return (
+          <div class="page page-artwork">
+            <section class="artwork-stage-section">
+              <div class={`artwork-stage-shell artwork-stage-shell-${leadShape()}`}>
+                <div
+                  class={`artwork-stage artwork-stage-${leadShape()}`}
+                  style={createMediaAspectStyle(leadMedia())}
+                >
+                  <For each={heroSlides()}>
+                    {(media, index) => (
+                      <figure
+                        class={`artwork-stage-media ${index() === heroSlideIndex() ? "is-active" : ""}`}
+                      >
+                        {renderMediaAsset(media, {
+                          autoplay: index() === heroSlideIndex(),
+                          class: "artwork-stage-asset",
+                          loading: index() === 0 ? "eager" : "lazy",
+                        })}
+                      </figure>
+                    )}
+                  </For>
+
+                  <Show when={heroSlides().length > 1}>
+                    <div class="artwork-stage-progress" aria-label="Artwork slides">
+                      <For each={heroSlides()}>
+                        {(_, index) => (
+                          <button
+                            type="button"
+                            class={`artwork-stage-dot ${index() === heroSlideIndex() ? "is-active" : ""}`}
+                            aria-label={`Show artwork slide ${index() + 1}`}
+                            aria-pressed={index() === heroSlideIndex()}
+                            onClick={() => setHeroSlideIndex(index())}
+                          />
+                        )}
+                      </For>
+                    </div>
+                  </Show>
+                </div>
+              </div>
+
+              <div class="artwork-plaque">
+                <div class="artwork-plaque-main">
+                  <p class="eyebrow">
+                    <Show when={realm()}>
+                      {(resolvedRealm) => (
+                        <A href={`/realm/${resolvedRealm().slug}`}>
+                          {resolvedRealm().name}
+                        </A>
+                      )}
+                    </Show>
+                  </p>
+                  <h1>{resolvedArtwork().title}</h1>
+                  <p class="artwork-summary">{resolvedArtwork().summary}</p>
+
+                  <Show when={resolvedArtwork().archiveHref}>
+                    <a
+                      href={resolvedArtwork().archiveHref}
+                      target="_blank"
+                      rel="noreferrer"
+                      class="artwork-archive-link"
+                    >
+                      View archive trace
+                    </a>
+                  </Show>
+                </div>
+
+                <div class="artwork-plaque-side">
+                  <div class="artwork-facts-shell">
+                    <p class="artwork-meta-label">Wall label</p>
+                    <dl class="work-facts artwork-facts">
+                      <div>
+                        <dt>Year</dt>
+                        <dd>{resolvedArtwork().year}</dd>
+                      </div>
+                      <div>
+                        <dt>Medium</dt>
+                        <dd>{resolvedArtwork().medium}</dd>
+                      </div>
+                      <div>
+                        <dt>Focus</dt>
+                        <dd class="work-facts-tags">
+                          <For each={resolvedArtwork().tags}>
+                            {(tag, index) => (
+                              <>
+                                <span>{tag}</span>
+                                <Show when={index() < resolvedArtwork().tags.length - 1}>
+                                  <span class="work-facts-separator"> / </span>
+                                </Show>
+                              </>
+                            )}
+                          </For>
+                        </dd>
+                      </div>
+                    </dl>
+                  </div>
+
+                  <Show when={resolvedArtwork().tags.length > 0}>
+                    <div class="artwork-tag-row">
+                      <For each={resolvedArtwork().tags.slice(0, 6)}>
+                        {(tag) => <span>{tag}</span>}
+                      </For>
+                    </div>
+                  </Show>
+
+                  <Show when={realm()}>
+                    {(resolvedRealm) => (
+                      <RoomWhisperCard
+                        realmSlug={resolvedRealm().slug}
+                        compact
+                        eyebrow="Gallery note"
+                      />
+                    )}
+                  </Show>
+                </div>
+              </div>
+            </section>
+
+            <Show when={additionalMedia().length > 0}>
+              <section class="artwork-details-section">
+                <div class="section-heading artwork-section-heading">
+                  <p class="eyebrow">Additional views</p>
+                  <h2>Fragments around the study</h2>
+                </div>
+                <div class="media-mosaic artwork-media-mosaic">
+                  <For each={additionalMedia()}>
+                    {(media) => (
+                      <figure class="media-card artwork-media-card">
+                        {renderMediaAsset(media, { autoplay: false })}
+                        <Show when={media.caption}>
+                          <figcaption>{media.caption}</figcaption>
+                        </Show>
+                      </figure>
+                    )}
+                  </For>
+                </div>
+              </section>
+            </Show>
+
+            <Show when={related().length > 0}>
+              <ArtworkRelatedSection works={related()} />
+            </Show>
+          </div>
+        );
+      }}
+    </Show>
+  );
+}
+
+function CaseStudyPage() {
+  const params = useParams();
+  const navigate = useNavigate();
+  const caseStudySlug = () => params.caseStudySlug ?? "";
+  const work = () => getWorkBySlug(caseStudySlug());
+  const isRouteVisible = useRouteReveal();
+  const { heroSlides, heroSlideIndex, setHeroSlideIndex } = useHeroCarousel(work, isRouteVisible);
 
   createEffect(() => {
     const resolved = work();
-    if (!resolved || !isRouteVisible()) return;
-
-    setHeroSlideIndex(0);
-
-    const slides = resolved.media.slice(0, 5);
-    if (slides.length < 2) return;
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
-
-    const introSlides = slides.slice(1, 4).map((_, index) => index + 1);
-    const timers: number[] = [];
-    let elapsed = 1450;
-
-    for (const slideIndex of introSlides) {
-      timers.push(window.setTimeout(() => setHeroSlideIndex(slideIndex), elapsed));
-      elapsed += 720;
+    if (resolved && !isCaseStudyWork(resolved)) {
+      navigate(getWorkHref(resolved), { replace: true });
     }
-
-    timers.push(window.setTimeout(() => setHeroSlideIndex(0), elapsed));
-
-    onCleanup(() => {
-      for (const timer of timers) window.clearTimeout(timer);
-    });
   });
 
   return (
     <Show when={work()} fallback={<NotFoundPage />}>
       {(resolvedWork) => {
+        if (!isCaseStudyWork(resolvedWork())) {
+          return <div class="page page-route-bridge" />;
+        }
+
         const realm = () => getRealmBySlug(resolvedWork().realmSlug);
         const related = () => getRelatedWorks(resolvedWork().slug);
-        const heroSlides = () => resolvedWork().media.slice(0, 5);
         const displayBlocks = () => {
           const blocks = [...(resolvedWork().blocks ?? [])];
 
@@ -1468,38 +1685,11 @@ function WorkPage() {
             </Show>
 
             <Show when={related().length > 0}>
-              <section class="related-section">
-                <div class="related-shell">
-                  <div class="related-header">
-                    <p class="eyebrow">Nearby pieces</p>
-                    <h2>Other works in Kate&apos;s orbit</h2>
-                    <p class="related-copy">
-                      Adjacent studies from the same visual world.
-                    </p>
-                  </div>
-                  <div class="related-grid">
-                  <For each={related()}>
-                    {(item, index) => (
-                      <A
-                        href={`/work/${item.slug}`}
-                        class={`related-card related-card-tone-${index() % 3}`}
-                      >
-                        <figure class="related-card-media">
-                          {renderMediaAsset(item.media[0])}
-                        </figure>
-                        <div class="related-card-copy">
-                          <p class="related-card-kicker">
-                            {item.year} / {item.medium}
-                          </p>
-                          <h3>{item.title}</h3>
-                          <p>{item.summary}</p>
-                        </div>
-                      </A>
-                    )}
-                  </For>
-                  </div>
-                </div>
-              </section>
+              <RelatedWorksSection
+                works={related()}
+                title="Other case studies in Kate's orbit"
+                copy="Adjacent projects from the same visual world."
+              />
             </Show>
           </div>
         );
@@ -1532,7 +1722,8 @@ export default function App(): JSX.Element {
       <Route path="/" component={HomePage} />
       <Route path="/admin" component={AdminPage} />
       <Route path="/realm/:realmSlug" component={RealmPage} />
-      <Route path="/work/:workSlug" component={WorkPage} />
+      <Route path="/artworks/:artworkSlug" component={ArtworkPage} />
+      <Route path="/case-study/:caseStudySlug" component={CaseStudyPage} />
       <Route path="*all" component={NotFoundPage} />
     </Router>
   );
