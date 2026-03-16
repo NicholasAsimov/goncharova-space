@@ -23,7 +23,10 @@
       ],
       "fileName": "2026-01-02_DTAODgHjGP8_reel_01.mp4",
       "curatedPath": "archive/curated/play/2026-01-02_DTAODgHjGP8_reel_01.mp4",
-      "createdAt": "2026-03-09T07:31:04.207Z"
+      "createdAt": "2026-03-09T07:31:04.207Z",
+      "width": 1916,
+      "height": 1080,
+      "poster": "archive/curated/play/2026-01-02_DTAODgHjGP8_reel_01-poster.jpg"
     },
     {
       "id": "3d6174d63dfc",
@@ -46,7 +49,10 @@
       ],
       "fileName": "2025-12-14_DSP0uANjJ0F_reel_01.mp4",
       "curatedPath": "archive/curated/play/2025-12-14_DSP0uANjJ0F_reel_01.mp4",
-      "createdAt": "2026-03-09T07:33:58.707Z"
+      "createdAt": "2026-03-09T07:33:58.707Z",
+      "width": 1916,
+      "height": 1080,
+      "poster": "archive/curated/play/2025-12-14_DSP0uANjJ0F_reel_01-poster.jpg"
     },
     {
       "id": "2f870bdfde1f",
@@ -69,7 +75,10 @@
       ],
       "fileName": "2025-09-17_DOtgB4TjGkO_highlight_02.mp4",
       "curatedPath": "archive/curated/play/2025-09-17_DOtgB4TjGkO_highlight_02.mp4",
-      "createdAt": "2026-03-09T07:38:35.733Z"
+      "createdAt": "2026-03-09T07:38:35.733Z",
+      "width": 720,
+      "height": 1280,
+      "poster": "archive/curated/play/2025-09-17_DOtgB4TjGkO_highlight_02-poster.jpg"
     }
   ]
 }

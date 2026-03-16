@@ -21,7 +21,9 @@
       ],
       "fileName": "2022-06-21_CfEIO7LtxzK_post_02.jpg",
       "curatedPath": "archive/curated/orchard/2022-06-21_CfEIO7LtxzK_post_02.jpg",
-      "createdAt": "2026-03-09T07:59:42.410Z"
+      "createdAt": "2026-03-09T07:59:42.410Z",
+      "width": 1440,
+      "height": 960
     },
     {
       "id": "85ae570f25ed",
@@ -42,7 +44,9 @@
       ],
       "fileName": "2023-09-04_Cww1Bertkb8_highlight_45.jpg",
       "curatedPath": "archive/curated/orchard/2023-09-04_Cww1Bertkb8_highlight_45.jpg",
-      "createdAt": "2026-03-09T08:00:23.457Z"
+      "createdAt": "2026-03-09T08:00:23.457Z",
+      "width": 1242,
+      "height": 2208
     }
   ]
 }

@@ -11,6 +11,9 @@ export interface MediaItem {
   src: string;
   alt: string;
   kind: MediaKind;
+  width: number;
+  height: number;
+  poster?: string;
   caption?: string;
 }
 

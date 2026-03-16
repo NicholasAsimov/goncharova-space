@@ -27,6 +27,7 @@ import {
   type ReviewStatus,
   type UnhideItemPayload,
 } from "../src/shared/admin.ts";
+import { readMediaMetadata, toRootRelativePath } from "./media-metadata.ts";
 
 interface MetadataShape {
   post_url?: string;
@@ -201,6 +202,8 @@ async function approveItem(payload: ApproveItemPayload): Promise<void> {
     throw new Error(`realm manifest ${payload.selectedRealm} not loaded`);
   }
 
+  const mediaMetadata = await readMediaMetadata(ROOT, destination);
+
   manifest.items.push({
     id: createHash("sha1").update(sourcePath).digest("hex").slice(0, 12),
     account: inferAccountFromSourcePath(sourcePath),
@@ -212,7 +215,10 @@ async function approveItem(payload: ApproveItemPayload): Promise<void> {
     colors: sanitizeTags(payload.colors, colorSet) as ReviewColor[],
     motifs: sanitizeTags(payload.motifs, motifSet) as ReviewMotif[],
     fileName: basename(destination),
-    curatedPath: relative(ROOT, destination),
+    curatedPath: toRootRelativePath(ROOT, destination),
+    width: mediaMetadata.width,
+    height: mediaMetadata.height,
+    poster: mediaMetadata.poster,
     createdAt: new Date().toISOString(),
   });
 

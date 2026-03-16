@@ -22,7 +22,9 @@
       ],
       "fileName": "2025-06-16_DK90K_dNive_post_01.jpg",
       "curatedPath": "archive/curated/mirror/2025-06-16_DK90K_dNive_post_01.jpg",
-      "createdAt": "2026-03-09T07:39:32.275Z"
+      "createdAt": "2026-03-09T07:39:32.275Z",
+      "width": 1440,
+      "height": 960
     },
     {
       "id": "bef03415fc74",
@@ -47,7 +49,9 @@
       ],
       "fileName": "2026-01-09_DTSqmJwDGY-_post_01.jpg",
       "curatedPath": "archive/curated/mirror/2026-01-09_DTSqmJwDGY-_post_01.jpg",
-      "createdAt": "2026-03-09T07:40:51.709Z"
+      "createdAt": "2026-03-09T07:40:51.709Z",
+      "width": 1242,
+      "height": 1656
     },
     {
       "id": "5e74a8944e2f",
@@ -70,7 +74,9 @@
       ],
       "fileName": "2025-06-16_DK9v2YStbKJ_post_01.jpg",
       "curatedPath": "archive/curated/mirror/2025-06-16_DK9v2YStbKJ_post_01.jpg",
-      "createdAt": "2026-03-09T07:42:10.858Z"
+      "createdAt": "2026-03-09T07:42:10.858Z",
+      "width": 1440,
+      "height": 960
     }
   ]
 }

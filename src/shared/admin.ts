@@ -87,6 +87,9 @@ export interface CuratedItem {
   motifs: ReviewMotif[];
   fileName: string;
   curatedPath: string;
+  width: number;
+  height: number;
+  poster?: string;
   createdAt: string;
 }
 

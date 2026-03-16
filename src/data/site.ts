@@ -17,6 +17,9 @@ interface CuratedManifestItem {
   motifs: string[];
   fileName: string;
   curatedPath: string;
+  width: number;
+  height: number;
+  poster?: string;
   createdAt: string;
 }
 
@@ -105,6 +108,9 @@ function createCuratedMedia(item: CuratedManifestItem): MediaItem {
     src: item.curatedPath,
     alt: item.note.trim() || deriveCuratedTitle(item),
     kind: extensionToMediaKind(item.fileName),
+    width: item.width,
+    height: item.height,
+    poster: item.poster,
   };
 }
 

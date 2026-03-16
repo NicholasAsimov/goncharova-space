@@ -1,6 +1,16 @@
-import { A, Route, Router, useLocation, useParams } from "@solidjs/router";
-import { For, Show, createEffect, createResource, createSignal, onCleanup } from "solid-js";
-import type { JSX, ParentProps } from "solid-js";
+import { A, Route, Router, useLocation, useNavigate, useParams } from "@solidjs/router";
+import {
+  For,
+  Show,
+  createContext,
+  createEffect,
+  createResource,
+  createSignal,
+  onCleanup,
+  onMount,
+  useContext,
+} from "solid-js";
+import type { Accessor, JSX, ParentProps } from "solid-js";
 import AdminPage from "./admin/AdminPage";
 import type { CaseStudyBlock, MediaItem, RichTextSpan } from "./data/schema";
 import {
@@ -11,13 +21,120 @@ import {
   getWorksForRealm,
   getRelatedWorks,
   isLazyAssetPath,
-  resolveLazyAssetPath,
   siteManifest,
 } from "./data/site";
+import {
+  createMediaAspectStyle,
+  getManagedRouteDetails,
+  getManagedRouteKind,
+  preloadManagedRoute,
+  resolveMediaAssetPath,
+  type ManagedRouteKind,
+} from "./route-media";
+
+type CitrusVariant = "lemon" | "orange";
+type TransitionSource = "initial" | "navigate" | "history";
+
+interface MediaRenderOptions {
+  class?: string;
+  autoplay?: boolean;
+  loading?: "eager" | "lazy";
+  preload?: "none" | "metadata" | "auto";
+}
+
+interface TransitionProfile {
+  coverMs: number;
+  minMs: number;
+  revealMs: number;
+}
+
+interface InterludeState {
+  token: number;
+  variant: CitrusVariant;
+  kind: ManagedRouteKind;
+  title: string;
+  eyebrow: string;
+  description: string;
+  phase: "covering" | "revealing";
+  revealMs: number;
+}
+
+const PRELOAD_TIMEOUT_MS = 6500;
+const RouteRevealContext = createContext<Accessor<boolean>>();
+
+function useRouteReveal(): Accessor<boolean> {
+  return useContext(RouteRevealContext) ?? (() => true);
+}
+
+function pickNextVariant(previous: CitrusVariant | null): CitrusVariant {
+  const candidate: CitrusVariant = Math.random() < 0.5 ? "lemon" : "orange";
+  if (!previous || candidate !== previous) return candidate;
+  return previous === "lemon" ? "orange" : "lemon";
+}
+
+function wait(ms: number): Promise<void> {
+  return new Promise((resolve) => window.setTimeout(resolve, ms));
+}
+
+function waitForPaint(): Promise<void> {
+  return new Promise((resolve) => requestAnimationFrame(() => resolve()));
+}
+
+function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T | null> {
+  return Promise.race([promise, wait(ms).then(() => null)]);
+}
+
+function getTransitionProfile(kind: ManagedRouteKind, source: TransitionSource, reduceMotion: boolean): TransitionProfile {
+  if (reduceMotion) {
+    return source === "history"
+      ? { coverMs: 0, minMs: 140, revealMs: 180 }
+      : kind === "realm"
+        ? { coverMs: 80, minMs: 260, revealMs: 220 }
+        : { coverMs: 40, minMs: 200, revealMs: 180 };
+  }
+
+  if (source === "history") {
+    return kind === "realm"
+      ? { coverMs: 150, minMs: 920, revealMs: 380 }
+      : { coverMs: 110, minMs: 640, revealMs: 300 };
+  }
+
+  return kind === "realm"
+    ? { coverMs: 320, minMs: 1760, revealMs: 620 }
+    : { coverMs: 190, minMs: 980, revealMs: 420 };
+}
 
 function RootShell(props: ParentProps) {
   const location = useLocation();
+  const navigate = useNavigate();
   const isAdmin = () => location.pathname === "/admin";
+  const initialDetails = getManagedRouteDetails(location.pathname);
+  const initialVariant = initialDetails ? pickNextVariant(null) : null;
+  const initialProfile = initialDetails
+    ? getTransitionProfile(initialDetails.kind, "initial", false)
+    : null;
+  const [prefersReducedMotion, setPrefersReducedMotion] = createSignal(false);
+  const [lastVariant, setLastVariant] = createSignal<CitrusVariant | null>(initialVariant);
+  const [contentHidden, setContentHidden] = createSignal(Boolean(initialDetails));
+  const [pendingTargetPath, setPendingTargetPath] = createSignal<string | null>(null);
+  const isRouteRevealed = () => !contentHidden();
+  const [interludeState, setInterludeState] = createSignal<InterludeState | null>(
+    initialDetails && initialVariant
+      ? {
+          token: 1,
+          variant: initialVariant,
+          kind: initialDetails.kind,
+          title: initialDetails.title,
+          eyebrow: initialDetails.eyebrow,
+          description: initialDetails.description,
+          phase: "covering",
+          revealMs: initialProfile?.revealMs ?? 620,
+        }
+      : null,
+  );
+  let activeToken = initialDetails ? 1 : 0;
+  let pendingCommit: { path: string; resolve: () => void } | null = null;
+  let observedPath = location.pathname;
 
   createEffect(() => {
     const path = location.pathname;
@@ -42,55 +159,272 @@ function RootShell(props: ParentProps) {
     document.title = title;
   });
 
+  createEffect(() => {
+    if (isAdmin()) return;
+    if (!interludeState()) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    onCleanup(() => {
+      document.body.style.overflow = previousOverflow;
+    });
+  });
+
+  createEffect(() => {
+    const path = location.pathname;
+
+    if (pendingCommit?.path === path) {
+      pendingCommit.resolve();
+      pendingCommit = null;
+    }
+
+    if (path === observedPath) return;
+    observedPath = path;
+
+    if (path === pendingTargetPath()) return;
+    if (isAdmin()) return;
+
+    const details = getManagedRouteDetails(path);
+    if (!details) return;
+
+    void revealCurrentPath(path, details.kind, "history");
+  });
+
+  onMount(() => {
+    const query = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const syncReducedMotion = () => setPrefersReducedMotion(query.matches);
+    syncReducedMotion();
+    query.addEventListener("change", syncReducedMotion);
+    document.addEventListener("click", handleShellClick, true);
+    onCleanup(() => {
+      query.removeEventListener("change", syncReducedMotion);
+      document.removeEventListener("click", handleShellClick, true);
+    });
+
+    if (initialDetails) {
+      void revealCurrentPath(location.pathname, initialDetails.kind, "initial", {
+        token: 1,
+        variant: initialVariant ?? "lemon",
+      });
+    }
+  });
+
+  function buildInterludeState(
+    path: string,
+    token: number,
+    variant: CitrusVariant,
+    revealMs: number,
+  ): InterludeState | null {
+    const details = getManagedRouteDetails(path);
+    if (!details) return null;
+
+    return {
+      token,
+      variant,
+      kind: details.kind,
+      title: details.title,
+      eyebrow: details.eyebrow,
+      description: details.description,
+      phase: "covering",
+      revealMs,
+    };
+  }
+
+  async function waitForManagedCommit(path: string): Promise<void> {
+    if (location.pathname === path) return;
+    await new Promise<void>((resolve) => {
+      pendingCommit = { path, resolve };
+    });
+  }
+
+  async function warmRoute(path: string): Promise<void> {
+    await withTimeout(
+      preloadManagedRoute(path).catch((error) => {
+        console.error(error);
+      }),
+      PRELOAD_TIMEOUT_MS,
+    );
+  }
+
+  async function revealCurrentPath(
+    path: string,
+    kind: ManagedRouteKind,
+    source: TransitionSource,
+    seed?: { token: number; variant: CitrusVariant },
+  ): Promise<void> {
+    const token = seed?.token ?? ++activeToken;
+    const variant = seed?.variant ?? pickNextVariant(lastVariant());
+    const profile = getTransitionProfile(kind, source, prefersReducedMotion());
+    const nextState = buildInterludeState(path, token, variant, profile.revealMs);
+    if (!nextState) {
+      setContentHidden(false);
+      setInterludeState(null);
+      return;
+    }
+
+    const startedAt = performance.now();
+    setLastVariant(variant);
+    setInterludeState(nextState);
+    setPendingTargetPath(null);
+    setContentHidden(true);
+
+    await Promise.all([wait(profile.coverMs), warmRoute(path)]);
+
+    if (token !== activeToken) return;
+
+    const remaining = profile.minMs - (performance.now() - startedAt);
+    if (remaining > 0) await wait(remaining);
+    if (token !== activeToken) return;
+
+    await waitForPaint();
+    if (token !== activeToken) return;
+
+    setContentHidden(false);
+    setInterludeState((current) =>
+      current && current.token === token ? { ...current, phase: "revealing" } : current,
+    );
+    await wait(profile.revealMs);
+    if (token !== activeToken) return;
+
+    setInterludeState(null);
+  }
+
+  async function transitionToPath(path: string): Promise<void> {
+    if (path === location.pathname) return;
+
+    const details = getManagedRouteDetails(path);
+    if (!details) {
+      navigate(path);
+      return;
+    }
+
+    const token = ++activeToken;
+    const variant = pickNextVariant(lastVariant());
+    const profile = getTransitionProfile(details.kind, "navigate", prefersReducedMotion());
+    const nextState = buildInterludeState(path, token, variant, profile.revealMs);
+    if (!nextState) {
+      navigate(path);
+      return;
+    }
+
+    const startedAt = performance.now();
+    setLastVariant(variant);
+    setInterludeState(nextState);
+    setPendingTargetPath(path);
+
+    await wait(profile.coverMs);
+    if (token !== activeToken) return;
+
+    await warmRoute(path);
+    if (token !== activeToken) return;
+
+    setContentHidden(true);
+    const committed = waitForManagedCommit(path);
+    navigate(path);
+    await committed;
+    if (token !== activeToken) return;
+
+    await waitForPaint();
+    if (token !== activeToken) return;
+
+    const remaining = profile.minMs - (performance.now() - startedAt);
+    if (remaining > 0) await wait(remaining);
+    if (token !== activeToken) return;
+
+    setContentHidden(false);
+    setInterludeState((current) =>
+      current && current.token === token ? { ...current, phase: "revealing" } : current,
+    );
+    await wait(profile.revealMs);
+    if (token !== activeToken) return;
+
+    setPendingTargetPath(null);
+    setInterludeState(null);
+  }
+
+  function handleShellClick(event: MouseEvent): void {
+    if (isAdmin()) return;
+    if (event.defaultPrevented) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+
+    const anchor = target.closest("a");
+    if (!anchor) return;
+    if (anchor.target && anchor.target !== "_self") return;
+    if (anchor.hasAttribute("download")) return;
+
+    const destination = new URL(anchor.href, window.location.href);
+    if (destination.origin !== window.location.origin) return;
+    if (!getManagedRouteKind(destination.pathname)) return;
+    if (destination.pathname === location.pathname) return;
+
+    event.preventDefault();
+    void transitionToPath(destination.pathname);
+  }
+
   return (
-    <div class={`site-shell ${isAdmin() ? "site-shell-admin" : ""}`}>
-      <Show when={!isAdmin()}>
-        <div class="ambient ambient-left" aria-hidden="true" />
-        <div class="ambient ambient-right" aria-hidden="true" />
-      </Show>
-      <header class={`site-header ${isAdmin() ? "site-header-admin" : ""}`}>
-        <A href="/" class="wordmark">
-          kate
-        </A>
-        <Show
-          when={!isAdmin()}
-          fallback={<div class="admin-header-label">local curation admin</div>}
-        >
-          <nav class="site-nav" aria-label="Primary">
-            <For each={getRealms()}>
-              {(realm) => (
-                <A href={`/realm/${realm.slug}`} class="nav-link">
-                  {realm.name}
-                </A>
-              )}
-            </For>
-          </nav>
+    <RouteRevealContext.Provider value={isRouteRevealed}>
+      <div class={`site-shell ${isAdmin() ? "site-shell-admin" : ""}`}>
+        <Show when={!isAdmin() && interludeState()}>
+          {(state) => <CitrusInterlude state={state()} />}
         </Show>
-      </header>
-      <main class={`site-main ${isAdmin() ? "site-main-admin" : ""}`}>{props.children}</main>
-    </div>
+        <Show when={!isAdmin()}>
+          <div class="ambient ambient-left" aria-hidden="true" />
+          <div class="ambient ambient-right" aria-hidden="true" />
+        </Show>
+        <header class={`site-header ${isAdmin() ? "site-header-admin" : ""}`}>
+          <A href="/" class="wordmark">
+            kate
+          </A>
+          <Show
+            when={!isAdmin()}
+            fallback={<div class="admin-header-label">local curation admin</div>}
+          >
+            <nav class="site-nav" aria-label="Primary">
+              <For each={getRealms()}>
+                {(realm) => (
+                  <A href={`/realm/${realm.slug}`} class="nav-link">
+                    {realm.name}
+                  </A>
+                )}
+              </For>
+            </nav>
+          </Show>
+        </header>
+        <main
+          class={`site-main ${isAdmin() ? "site-main-admin" : ""} ${contentHidden() ? "site-main-concealed" : ""}`}
+        >
+          {props.children}
+        </main>
+      </div>
+    </RouteRevealContext.Provider>
   );
 }
 
 function renderResolvedMediaAsset(
   media: MediaItem,
   src: string,
-  options?: {
-    class?: string;
-    autoplay?: boolean;
-  },
+  posterSrc?: string,
+  options?: MediaRenderOptions,
 ): JSX.Element {
   if (media.kind === "video") {
+    const autoplay = options?.autoplay ?? true;
     return (
       <video
         class={options?.class}
         src={src}
+        poster={posterSrc}
         aria-label={media.alt}
+        width={media.width}
+        height={media.height}
         muted
         playsinline
         loop
-        preload="metadata"
-        autoplay={options?.autoplay ?? true}
+        preload={options?.preload ?? (autoplay ? "metadata" : "none")}
+        autoplay={autoplay}
       />
     );
   }
@@ -100,38 +434,189 @@ function renderResolvedMediaAsset(
       class={options?.class}
       src={src}
       alt={media.alt}
+      width={media.width}
+      height={media.height}
+      loading={options?.loading ?? "lazy"}
+      decoding="async"
     />
   );
 }
 
 function LazyMediaAsset(props: {
   media: MediaItem;
-  options?: {
-    class?: string;
-    autoplay?: boolean;
-  };
+  options?: MediaRenderOptions;
 }): JSX.Element {
-  const [src] = createResource(() => props.media.src, resolveLazyAssetPath);
+  const [assetPaths] = createResource(
+    () => `${props.media.src}|${props.media.poster ?? ""}`,
+    async (key) => {
+      const separatorIndex = key.indexOf("|");
+      const src = separatorIndex === -1 ? key : key.slice(0, separatorIndex);
+      const poster = separatorIndex === -1 ? "" : key.slice(separatorIndex + 1);
+
+      return {
+        src: await resolveMediaAssetPath(src),
+        poster: poster ? await resolveMediaAssetPath(poster) : undefined,
+      };
+    },
+  );
 
   return (
-    <Show when={src()}>
-      {(resolvedSrc) => renderResolvedMediaAsset(props.media, resolvedSrc(), props.options)}
+    <Show when={assetPaths()}>
+      {(resolved) =>
+        renderResolvedMediaAsset(props.media, resolved().src, resolved().poster, props.options)
+      }
     </Show>
   );
 }
 
 function renderMediaAsset(
   media: MediaItem,
-  options?: {
-    class?: string;
-    autoplay?: boolean;
-  },
+  options?: MediaRenderOptions,
 ): JSX.Element {
-  if (isLazyAssetPath(media.src)) {
+  if (isLazyAssetPath(media.src) || (media.poster && isLazyAssetPath(media.poster))) {
     return <LazyMediaAsset media={media} options={options} />;
   }
 
-  return renderResolvedMediaAsset(media, asset(media.src), options);
+  return renderResolvedMediaAsset(
+    media,
+    asset(media.src),
+    media.poster ? asset(media.poster) : undefined,
+    options,
+  );
+}
+
+function CitrusInterlude(props: { state: InterludeState }): JSX.Element {
+  const segments = () => buildCitrusSegments(props.state.variant === "orange" ? 8 : 6, props.state.variant);
+  const crumbs = () => buildCitrusCrumbs(props.state.variant);
+
+  return (
+    <div
+      class={`citrus-interlude citrus-interlude-${props.state.kind} citrus-interlude-${props.state.variant} ${props.state.phase === "revealing" ? "is-revealing" : ""}`}
+      style={{ "--overlay-reveal-ms": `${props.state.revealMs}ms` }}
+      role="status"
+      aria-live="polite"
+      aria-label={`${props.state.eyebrow}: ${props.state.title}`}
+    >
+      <div class="citrus-interlude-haze citrus-interlude-haze-left" aria-hidden="true" />
+      <div class="citrus-interlude-haze citrus-interlude-haze-right" aria-hidden="true" />
+      <div class="citrus-interlude-grain" aria-hidden="true" />
+
+      <div class="citrus-interlude-stage">
+        <div class="citrus-interlude-fruit-shell" aria-hidden="true">
+          <div class="citrus-interlude-cut-line" />
+          <svg
+            class="citrus-interlude-fruit"
+            viewBox="0 0 240 240"
+            fill="none"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <circle class="citrus-ring citrus-ring-outer" cx="120" cy="120" r="100" />
+            <circle class="citrus-ring citrus-ring-inner" cx="120" cy="120" r="87" />
+            <circle class="citrus-ring citrus-ring-core" cx="120" cy="120" r="16" />
+
+            <For each={segments()}>
+              {(segment) => (
+                <g class="citrus-segment" style={segment.style}>
+                  <path class="citrus-segment-fill" d={segment.path} />
+                  <path class="citrus-segment-vein" d={segment.veinPath} />
+                </g>
+              )}
+            </For>
+          </svg>
+
+          <div class="citrus-crumbs">
+            <For each={crumbs()}>
+              {(crumb) => <span class="citrus-crumb" style={crumb} />}
+            </For>
+          </div>
+        </div>
+
+        <div class="citrus-interlude-copy">
+          <p class="citrus-interlude-eyebrow">{props.state.eyebrow}</p>
+          <h2>{props.state.title}</h2>
+          <p>{props.state.description}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function buildCitrusSegments(segmentCount: number, variant: CitrusVariant): Array<{
+  path: string;
+  veinPath: string;
+  style: JSX.CSSProperties;
+}> {
+  const sliceAngle = 360 / segmentCount;
+  const gap = variant === "orange" ? 7 : 9;
+
+  return Array.from({ length: segmentCount }, (_, index) => {
+    const startAngle = -90 + index * sliceAngle + gap / 2;
+    const endAngle = startAngle + sliceAngle - gap;
+    const midAngle = (startAngle + endAngle) / 2;
+    const midRadians = (midAngle * Math.PI) / 180;
+    const splitDistance = variant === "orange" ? 12 : 9;
+    const splitX = Math.cos(midRadians) * splitDistance;
+    const splitY = Math.sin(midRadians) * splitDistance;
+    const fallDistance = Math.sin(midRadians) > 0 ? (variant === "orange" ? 62 : 48) : -14;
+    const driftX = Math.cos(midRadians) * (variant === "orange" ? 18 : 12);
+    const tilt = `${Math.cos(midRadians) * 8 + (Math.sin(midRadians) > 0 ? 10 : -4)}deg`;
+    const outerPoint = polarPoint(120, 120, 78, midAngle);
+    const innerPoint = polarPoint(120, 120, 23, midAngle);
+
+    return {
+      path: describeRingSegment(120, 120, 24, 81, startAngle, endAngle),
+      veinPath: `M ${innerPoint.x.toFixed(2)} ${innerPoint.y.toFixed(2)} L ${outerPoint.x.toFixed(2)} ${outerPoint.y.toFixed(2)}`,
+      style: {
+        "--segment-delay": `${index * 48}ms`,
+        "--segment-split-x": `${splitX.toFixed(2)}px`,
+        "--segment-split-y": `${splitY.toFixed(2)}px`,
+        "--segment-drift-x": `${driftX.toFixed(2)}px`,
+        "--segment-fall-y": `${fallDistance.toFixed(2)}px`,
+        "--segment-tilt": tilt,
+      },
+    };
+  });
+}
+
+function buildCitrusCrumbs(variant: CitrusVariant): JSX.CSSProperties[] {
+  const crumbs = variant === "orange" ? 5 : 3;
+
+  return Array.from({ length: crumbs }, (_, index) => ({
+    "--crumb-delay": `${220 + index * 70}ms`,
+    "--crumb-left": `${36 + index * 11}%`,
+    "--crumb-size": `${variant === "orange" ? 0.6 : 0.48 + index * 0.04}rem`,
+  }));
+}
+
+function describeRingSegment(
+  cx: number,
+  cy: number,
+  innerRadius: number,
+  outerRadius: number,
+  startAngle: number,
+  endAngle: number,
+): string {
+  const startOuter = polarPoint(cx, cy, outerRadius, startAngle);
+  const endOuter = polarPoint(cx, cy, outerRadius, endAngle);
+  const endInner = polarPoint(cx, cy, innerRadius, endAngle);
+  const startInner = polarPoint(cx, cy, innerRadius, startAngle);
+  const largeArcFlag = endAngle - startAngle > 180 ? 1 : 0;
+
+  return [
+    `M ${startOuter.x.toFixed(2)} ${startOuter.y.toFixed(2)}`,
+    `A ${outerRadius} ${outerRadius} 0 ${largeArcFlag} 1 ${endOuter.x.toFixed(2)} ${endOuter.y.toFixed(2)}`,
+    `L ${endInner.x.toFixed(2)} ${endInner.y.toFixed(2)}`,
+    `A ${innerRadius} ${innerRadius} 0 ${largeArcFlag} 0 ${startInner.x.toFixed(2)} ${startInner.y.toFixed(2)}`,
+    "Z",
+  ].join(" ");
+}
+
+function polarPoint(cx: number, cy: number, radius: number, angle: number): { x: number; y: number } {
+  const radians = (angle * Math.PI) / 180;
+  return {
+    x: cx + Math.cos(radians) * radius,
+    y: cy + Math.sin(radians) * radius,
+  };
 }
 
 function HomePage() {
@@ -233,6 +718,7 @@ function RealmPage() {
   const realmSlug = () => params.realmSlug ?? "";
   const realm = () => getRealmBySlug(realmSlug());
   const works = () => getWorksForRealm(realmSlug());
+  const isPracticeRealm = () => realmSlug() === "practice";
 
   return (
     <Show when={realm()} fallback={<NotFoundPage />}>
@@ -244,8 +730,8 @@ function RealmPage() {
               <h1>{resolvedRealm().name}</h1>
               <p>{resolvedRealm().intro}</p>
             </div>
-            <figure class="realm-hero-figure">
-              {renderMediaAsset(resolvedRealm().coverMedia)}
+            <figure class="realm-hero-figure" style={createMediaAspectStyle(resolvedRealm().coverMedia)}>
+              {renderMediaAsset(resolvedRealm().coverMedia, { loading: "eager" })}
             </figure>
           </section>
 
@@ -254,29 +740,66 @@ function RealmPage() {
             <h2>{works().length} pieces gathered here</h2>
           </section>
 
-          <section class="work-stack">
-            <For each={works()}>
-              {(work) => (
-                <A href={`/work/${work.slug}`} class="work-panel">
-                  <figure class="work-panel-media">
-                    {renderMediaAsset(work.media[0])}
-                  </figure>
-                  <div class="work-panel-copy">
-                    <p class="panel-kicker">
-                      {work.year} / {work.medium}
-                    </p>
-                    <h3>{work.title}</h3>
-                    <p>{work.summary}</p>
-                    <div class="tag-row">
-                      <For each={work.tags}>
-                        {(tag) => <span>{tag}</span>}
-                      </For>
+          <Show
+            when={isPracticeRealm()}
+            fallback={
+              <section class="realm-mosaic">
+                <For each={works()}>
+                  {(work) => {
+                    const leadMedia = work.media[0]!;
+
+                    return (
+                      <A
+                        href={`/work/${work.slug}`}
+                        class={`realm-mosaic-card ${leadMedia.kind === "video" ? "realm-mosaic-card-video" : ""}`}
+                      >
+                        <figure class="realm-mosaic-media" style={createMediaAspectStyle(leadMedia)}>
+                          {renderMediaAsset(leadMedia, {
+                            autoplay: false,
+                            preload: leadMedia.kind === "video" ? "none" : undefined,
+                            loading: "eager",
+                          })}
+                          <Show when={leadMedia.kind === "video"}>
+                            <span class="realm-mosaic-badge">Moving image</span>
+                          </Show>
+                        </figure>
+                        <div class="realm-mosaic-copy">
+                          <p class="realm-mosaic-kicker">
+                            {work.year} / {work.medium}
+                          </p>
+                          <h3>{work.title}</h3>
+                        </div>
+                      </A>
+                    );
+                  }}
+                </For>
+              </section>
+            }
+          >
+            <section class="work-stack">
+              <For each={works()}>
+                {(work) => (
+                  <A href={`/work/${work.slug}`} class="work-panel">
+                    <figure class="work-panel-media">
+                      {renderMediaAsset(work.media[0])}
+                    </figure>
+                    <div class="work-panel-copy">
+                      <p class="panel-kicker">
+                        {work.year} / {work.medium}
+                      </p>
+                      <h3>{work.title}</h3>
+                      <p>{work.summary}</p>
+                      <div class="tag-row">
+                        <For each={work.tags}>
+                          {(tag) => <span>{tag}</span>}
+                        </For>
+                      </div>
                     </div>
-                  </div>
-                </A>
-              )}
-            </For>
-          </section>
+                  </A>
+                )}
+              </For>
+            </section>
+          </Show>
         </div>
       )}
     </Show>
@@ -510,11 +1033,12 @@ function WorkPage() {
   const params = useParams();
   const workSlug = () => params.workSlug ?? "";
   const work = () => getWorkBySlug(workSlug());
+  const isRouteVisible = useRouteReveal();
   const [heroSlideIndex, setHeroSlideIndex] = createSignal(0);
 
   createEffect(() => {
     const resolved = work();
-    if (!resolved) return;
+    if (!resolved || !isRouteVisible()) return;
 
     setHeroSlideIndex(0);
 
@@ -579,7 +1103,10 @@ function WorkPage() {
                       <figure
                         class={`work-hero-media ${index() === heroSlideIndex() ? "is-active" : ""}`}
                       >
-                        {renderMediaAsset(media)}
+                        {renderMediaAsset(media, {
+                          autoplay: index() === heroSlideIndex(),
+                          loading: index() === 0 ? "eager" : "lazy",
+                        })}
                       </figure>
                     )}
                   </For>

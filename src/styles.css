@@ -126,6 +126,12 @@ button:disabled {
 
 .site-main {
   min-height: 0;
+  transition: opacity 260ms ease;
+}
+
+.site-main-concealed {
+  opacity: 0;
+  visibility: hidden;
 }
 
 .site-main-admin {
@@ -136,6 +142,267 @@ button:disabled {
 .site-main-admin:has(.admin-page.is-grid) {
   height: auto;
   overflow: visible;
+}
+
+.citrus-interlude {
+  --overlay-reveal-ms: 620ms;
+  --segment-duration: 1580ms;
+  --cut-duration: 680ms;
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background:
+    radial-gradient(circle at top left, rgba(255, 246, 212, 0.9), transparent 34%),
+    radial-gradient(circle at bottom right, rgba(239, 182, 178, 0.18), transparent 28%),
+    linear-gradient(180deg, rgba(252, 247, 238, 0.96), rgba(245, 238, 227, 0.98));
+  opacity: 1;
+  transition: opacity var(--overlay-reveal-ms) ease;
+  overflow: hidden;
+}
+
+.citrus-interlude-work {
+  --segment-duration: 1120ms;
+  --cut-duration: 460ms;
+}
+
+.citrus-interlude.is-revealing {
+  opacity: 0;
+}
+
+.citrus-interlude::before {
+  content: "";
+  position: absolute;
+  inset: 1.1rem;
+  border: 1px solid rgba(31, 26, 23, 0.06);
+  border-radius: 2rem;
+}
+
+.citrus-interlude-stage {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 1.4rem;
+  text-align: center;
+}
+
+.citrus-interlude-fruit-shell {
+  position: relative;
+  width: min(38vw, 18rem);
+  aspect-ratio: 1;
+  display: grid;
+  place-items: center;
+}
+
+.citrus-interlude-fruit {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  filter: drop-shadow(0 30px 52px rgba(111, 77, 41, 0.18));
+}
+
+.citrus-interlude-cut-line {
+  position: absolute;
+  width: 1px;
+  height: 68%;
+  top: 16%;
+  left: 50%;
+  transform: translateX(-50%) scaleY(0);
+  transform-origin: center top;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0), rgba(31, 26, 23, 0.3), rgba(255, 255, 255, 0));
+  opacity: 0.7;
+  animation: citrus-cut-line var(--cut-duration) cubic-bezier(0.22, 1, 0.36, 1) 160ms forwards;
+}
+
+.citrus-ring {
+  transform-origin: center;
+}
+
+.citrus-ring-outer {
+  fill: rgba(255, 248, 224, 0.86);
+  stroke: rgba(255, 255, 255, 0.9);
+  stroke-width: 10;
+}
+
+.citrus-ring-inner {
+  fill: rgba(255, 248, 232, 0.54);
+  stroke: rgba(255, 255, 255, 0.44);
+  stroke-width: 1.5;
+}
+
+.citrus-ring-core {
+  fill: rgba(255, 252, 246, 0.9);
+  stroke: rgba(255, 255, 255, 0.5);
+  stroke-width: 1.5;
+}
+
+.citrus-segment {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: citrus-segment-split var(--segment-duration) cubic-bezier(0.18, 0.9, 0.22, 1) var(--segment-delay) forwards;
+}
+
+.citrus-segment-fill {
+  fill: rgba(248, 214, 102, 0.78);
+  stroke: rgba(255, 252, 243, 0.66);
+  stroke-width: 1.2;
+}
+
+.citrus-segment-vein {
+  stroke: rgba(255, 255, 255, 0.55);
+  stroke-width: 1.05;
+  stroke-linecap: round;
+}
+
+.citrus-interlude-orange .citrus-ring-outer {
+  fill: rgba(255, 221, 181, 0.84);
+}
+
+.citrus-interlude-orange .citrus-segment-fill {
+  fill: rgba(233, 141, 63, 0.82);
+}
+
+.citrus-interlude-orange .citrus-ring-core {
+  fill: rgba(255, 242, 231, 0.92);
+}
+
+.citrus-crumbs {
+  position: absolute;
+  inset: 0;
+}
+
+.citrus-crumb {
+  position: absolute;
+  left: var(--crumb-left);
+  top: 49%;
+  width: var(--crumb-size);
+  height: var(--crumb-size);
+  margin-left: calc(var(--crumb-size) * -0.5);
+  border-radius: 999px;
+  background: rgba(255, 249, 236, 0.82);
+  opacity: 0;
+  animation: citrus-crumb-fall 1160ms ease-out var(--crumb-delay) forwards;
+}
+
+.citrus-interlude-copy {
+  display: grid;
+  gap: 0.45rem;
+  justify-items: center;
+  max-width: 28rem;
+}
+
+.citrus-interlude-eyebrow {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.26em;
+  font-size: 0.68rem;
+  color: rgba(31, 26, 23, 0.46);
+}
+
+.citrus-interlude-copy h2 {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(3.1rem, 8vw, 5.5rem);
+  line-height: 0.92;
+  letter-spacing: -0.04em;
+}
+
+.citrus-interlude-work .citrus-interlude-fruit-shell {
+  width: min(31vw, 14rem);
+}
+
+.citrus-interlude-work .citrus-interlude-copy h2 {
+  font-size: clamp(2.6rem, 6vw, 4.2rem);
+}
+
+.citrus-interlude-copy p:last-child {
+  margin: 0;
+  max-width: 25rem;
+  color: rgba(31, 26, 23, 0.66);
+  font-size: 1rem;
+  line-height: 1.7;
+}
+
+.citrus-interlude-haze,
+.citrus-interlude-grain {
+  position: absolute;
+  inset: auto;
+  pointer-events: none;
+}
+
+.citrus-interlude-haze {
+  width: 34rem;
+  height: 34rem;
+  border-radius: 999px;
+  filter: blur(72px);
+  opacity: 0.46;
+}
+
+.citrus-interlude-haze-left {
+  top: -8rem;
+  left: -10rem;
+  background: rgba(244, 213, 82, 0.42);
+}
+
+.citrus-interlude-haze-right {
+  right: -9rem;
+  bottom: -10rem;
+  background: rgba(244, 196, 136, 0.36);
+}
+
+.citrus-interlude-grain {
+  inset: 0;
+  opacity: 0.18;
+  background-image:
+    radial-gradient(circle at 20% 20%, rgba(31, 26, 23, 0.08) 0.04rem, transparent 0.05rem),
+    radial-gradient(circle at 70% 32%, rgba(31, 26, 23, 0.06) 0.03rem, transparent 0.05rem),
+    radial-gradient(circle at 42% 78%, rgba(31, 26, 23, 0.06) 0.04rem, transparent 0.05rem);
+  background-size: 2.8rem 2.8rem;
+}
+
+@keyframes citrus-cut-line {
+  0% {
+    transform: translateX(-50%) scaleY(0);
+    opacity: 0;
+  }
+
+  100% {
+    transform: translateX(-50%) scaleY(1);
+    opacity: 0.72;
+  }
+}
+
+@keyframes citrus-segment-split {
+  0% {
+    transform: translate(0, 0) scale(0.94);
+  }
+
+  44% {
+    transform: translate(var(--segment-split-x), var(--segment-split-y)) scale(1);
+  }
+
+  100% {
+    transform: translate(calc(var(--segment-split-x) + var(--segment-drift-x)), var(--segment-fall-y)) rotate(var(--segment-tilt));
+  }
+}
+
+@keyframes citrus-crumb-fall {
+  0% {
+    transform: translateY(0) scale(0.6);
+    opacity: 0;
+  }
+
+  18% {
+    opacity: 0.9;
+  }
+
+  100% {
+    transform: translateY(6rem) scale(1);
+    opacity: 0;
+  }
 }
 
 .admin-header-label {
@@ -470,7 +737,9 @@ button:disabled {
   border-radius: 1.8rem;
   overflow: hidden;
   box-shadow: var(--shadow);
-  aspect-ratio: 0.92;
+  align-self: start;
+  aspect-ratio: var(--asset-ratio, 0.92);
+  background: rgba(255, 250, 242, 0.88);
 }
 
 .work-hero {
@@ -639,6 +908,92 @@ button:disabled {
 .work-stack {
   display: grid;
   gap: 1rem;
+}
+
+.realm-mosaic {
+  column-count: 4;
+  column-gap: 0.9rem;
+  margin-top: 0.75rem;
+}
+
+.realm-mosaic-card {
+  display: inline-grid;
+  width: 100%;
+  break-inside: avoid;
+  gap: 0.72rem;
+  margin: 0 0 1.05rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  transform: translateY(0);
+  transition: transform 220ms ease, opacity 220ms ease;
+}
+
+.realm-mosaic-card-video {
+  gap: 0.78rem;
+}
+
+.realm-mosaic-card:hover {
+  transform: translateY(-0.2rem);
+}
+
+.realm-mosaic-media {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  border-radius: 0.75rem;
+  aspect-ratio: var(--asset-ratio);
+  background: rgba(252, 247, 239, 0.8);
+}
+
+.realm-mosaic-card-video .realm-mosaic-media {
+  background: rgba(248, 243, 235, 0.94);
+}
+
+.realm-mosaic-media img,
+.realm-mosaic-media video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.realm-mosaic-badge {
+  position: absolute;
+  left: 0.75rem;
+  bottom: 0.75rem;
+  border-radius: 999px;
+  padding: 0.32rem 0.62rem;
+  background: rgba(20, 17, 15, 0.64);
+  color: rgba(255, 250, 242, 0.9);
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.58rem;
+  backdrop-filter: blur(10px);
+}
+
+.realm-mosaic-copy {
+  display: grid;
+  gap: 0.32rem;
+  align-content: start;
+  padding: 0 0.2rem;
+}
+
+.realm-mosaic-kicker {
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font-size: 0.63rem;
+  color: rgba(31, 26, 23, 0.42);
+}
+
+.realm-mosaic-copy h3 {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.35rem, 2vw, 2rem);
+  font-weight: 600;
+  line-height: 0.98;
+  letter-spacing: -0.03em;
 }
 
 .work-panel {
@@ -1102,10 +1457,13 @@ button:disabled {
   }
 
   .still-life,
-  .realm-hero-figure,
   .work-hero-stage {
     min-height: 24rem;
     aspect-ratio: auto;
+  }
+
+  .realm-hero-figure {
+    min-height: 0;
   }
 
   .realm-grid,
@@ -1114,8 +1472,26 @@ button:disabled {
     grid-template-columns: 1fr;
   }
 
+  .realm-mosaic {
+    column-count: 2;
+    column-gap: 0.7rem;
+  }
+
   .work-hero-stage {
     min-height: 34rem;
+  }
+
+  .citrus-interlude::before {
+    inset: 0.8rem;
+    border-radius: 1.6rem;
+  }
+
+  .citrus-interlude-fruit-shell {
+    width: min(52vw, 15rem);
+  }
+
+  .citrus-interlude-copy h2 {
+    font-size: clamp(2.7rem, 11vw, 4.4rem);
   }
 
   .work-meta {
@@ -1171,6 +1547,20 @@ button:disabled {
   }
 }
 
+@media (max-width: 620px) {
+  .realm-mosaic {
+    column-count: 1;
+  }
+
+  .citrus-interlude-stage {
+    gap: 1rem;
+  }
+
+  .citrus-interlude-copy p:last-child {
+    font-size: 0.95rem;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
@@ -1179,6 +1569,28 @@ button:disabled {
   .nav-link,
   .button {
     transition: none;
+  }
+
+  .site-main,
+  .realm-mosaic-card,
+  .citrus-interlude,
+  .citrus-segment,
+  .citrus-crumb,
+  .citrus-interlude-cut-line {
+    animation: none;
+    transition: none;
+  }
+
+  .citrus-interlude-cut-line {
+    transform: translateX(-50%) scaleY(1);
+  }
+
+  .citrus-segment {
+    transform: none;
+  }
+
+  .citrus-crumb {
+    display: none;
   }
 }
 
